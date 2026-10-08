@@ -6,9 +6,9 @@
 [![Zero Build Steps](https://img.shields.io/badge/Build%20Step-Zero%20Config-4caf50)](index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**JobConnect** is a comprehensive, full-featured career portal and talent hiring platform engineered entirely in **100% Pure Vanilla HTML5, CSS3, and Modern JavaScript (ES6+)**.
+**JobConnect** is a job-seeker-focused career portal engineered entirely in **100% Pure Vanilla HTML5, CSS3, and Modern JavaScript (ES6+)**.
 
-It features specialized end-to-end workflows for **Job Seekers**, **Employers / Recruiters**, and **Platform Administrators** with **zero external framework dependencies**, **zero npm packages**, and **zero build steps**.
+Job seekers can discover and apply for jobs, while platform administrators manage the company directory and active job listings. The project has **zero external framework dependencies**, **zero npm packages**, and **zero build steps**.
 
 ---
 
@@ -43,8 +43,7 @@ When users first visit the platform without being logged in, they are immediatel
 | Role | Email | Password | Access & Features |
 |:---|:---|:---|:---|
 | 👤 **Job Seeker** | `seeker@jobconnect.demo` | `password123` | Profile CRUD, Applications, AI ATS Resume Analyzer, Live Video Interview Room, Chat |
-| 💼 **Employer / Recruiter** | `employer@techcorp.demo` | `password123` | Post Jobs, Manage Listings, Candidate Pipeline Stepper, Talent Pool Search, Hiring Analytics |
-| 🛡️ **Platform Admin** | `admin@jobconnect.demo` | `password123` | Telemetry Dashboard, User Ban/Unban/Delete Moderation, Job Removal Moderation |
+| 🛡️ **Platform Admin** | `admin@jobconnect.demo` | `password123` | User moderation, company management, and active hiring controls |
 
 ---
 
@@ -73,31 +72,21 @@ When users first visit the platform without being logged in, they are immediatel
 - **Recruiter Chat Messenger:** Dedicated direct messaging system with simulated instant recruiter answers.
 - **Application Pipeline Tracker:** Track submissions across stages (*Applied → In Review → Shortlisted → Interviewing → Offered / Rejected*).
 - **Salary Insights Explorer:** Interactive percentile salary benchmarks across leading technology roles and top paying companies in India.
-- **Company Directory:** Explore tech employers, read employee reviews, ratings, and open vacancies.
+- **Company Directory:** Browse active companies by type (*MNC*, *Top Startup*, or *FAANG*) and see their currently active vacancies.
 
 ---
 
-### 💼 2. Employer & Recruiter Experience
-- **Employer Command Center:** At-a-glance KPI cards (*Active Job Posts, Total Applicants, Interviews Scheduled, Hire Conversion Rate*) and recent application feeds.
-- **Job Posting Wizard:** Complete vacancy creation form with title, category, workplace type, salary brackets, skills requirements, and rich description fields.
-- **Manage Job Listings:** View live status (*Active/Paused*), applicant counts, quick view, and delete actions.
-- **Candidate Pipeline Management:** Multi-stage candidate management modal to review resumes, update candidate stages, and schedule video interviews.
-- **Candidate Talent Pool Search:** Search candidate profiles by skill or title and dispatch instant interview invites.
-- **Hiring Analytics & Reports:** Visual conversion funnels, applicant acquisition source distributions, and hiring velocity metrics.
+### 🛡️ 2. Platform Administration
+- **User Management & Moderation:** Inspect registered users and ban or unban accounts.
+- **Company Directory Management:** Add and activate companies, categorize them as *MNC*, *Top Startup*, *FAANG*, or *Other*, and deactivate listings when needed.
+- **Active Hiring Management:** Publish jobs for active companies, edit job titles and locations, and pause or reactivate listings. Active changes appear in seeker job search, recommendations, and company pages.
 
 ---
 
-### 🛡️ 3. Platform Administration
-- **Telemetry & Health Dashboard:** Total registered users, active postings, total applications processed, and real-time 99.99% system health metrics.
-- **User Management & Moderation:** Search users, inspect roles, and execute instant account ban/unban or permanent deletion.
-- **Job Moderation:** Inspect all published listings and remove policy-violating vacancies.
-
----
-
-### 🌐 4. Customization, Accessibility & Persistence
+### 🌐 3. Customization, Accessibility & Persistence
 - **Multi-Language (i18n):** Native instant switching between **English (🇬🇧)**, **Hindi (🇮🇳 हिन्दी)**, and **Gujarati (🇮🇳 ગુજરાતી)**.
 - **Theme Engine:** Dark mode and Light mode with smooth CSS transitions and persistent user preference.
-- **Local Storage Data Persistence:** All user sessions, newly posted jobs, applications, saved bookmarks, interview records, reviews, and notifications automatically persist in browser `localStorage`.
+- **Local Storage Data Persistence:** User sessions, admin-managed companies and jobs, applications, saved bookmarks, interview records, reviews, and notifications persist in browser `localStorage`. Demo data is local to one browser and does not synchronize between separate users or devices.
 
 ---
 
@@ -130,26 +119,19 @@ job-portal/
 | `#/` | JobConnect Landing Page with Hero search, stats, category grid, and featured positions |
 | `#/jobs` | Job Discovery with live search, multi-faceted filtering, and sorting |
 | `#/jobs/:id` | Detailed Job Specification page with 1-click modal apply |
-| `#/companies` | Companies directory with employer profiles, ratings, and open roles |
+| `#/companies` | Company directory with MNC, Top Startup, FAANG, and active hiring filters |
 | `#/companies/:id` | Individual company profile, reviews, and active listings |
 | `#/salaries` | Salary benchmark explorer and top paying companies |
 | `#/ai-tools/resume` | AI Resume ATS Analyzer with score gauge and gap insights |
-| `#/interview` | Live Video Interview simulator with canvas audio visualizer |
+| `#/seeker/interviews/video` | Live Video Interview simulator with canvas audio visualizer |
 | `#/seeker/profile` | Candidate profile, skill manager, work & education CRUD, resume upload |
 | `#/seeker/applications` | Application status & pipeline tracker |
-| `#/seeker/saved` | Bookmarked positions list |
-| `#/seeker/messages` | Recruiter direct chat messenger |
+| `#/seeker/saved-jobs` | Bookmarked positions list |
+| `#/seeker/chat` | Job-seeker direct chat messenger |
 | `#/seeker/notifications` | Notifications center with action links |
-| `#/employer/dashboard` | Employer dashboard with KPI metrics and recent applicants |
-| `#/employer/jobs` | Employer job listings management |
-| `#/employer/post-job` | Post a new job vacancy form |
-| `#/employer/candidates` | Talent pool candidate search directory |
-| `#/employer/analytics` | Recruitment funnels and hiring performance analytics |
-| `#/admin/dashboard` | Platform metrics and system telemetry |
-| `#/admin/users` | User moderation (ban, unban, delete) |
-| `#/admin/jobs` | Platform job moderation |
-| `#/login` | Authentication page with 1-click role demo buttons |
-| `#/signup` | Account registration for Seekers and Employers |
+| `#/admin/dashboard` | User moderation, company directory management, and active hiring controls |
+| `#/login` | Sign in as a job seeker or platform administrator |
+| `#/signup` | Create a job seeker account |
 
 ---
 

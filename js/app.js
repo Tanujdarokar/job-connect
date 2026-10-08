@@ -87,20 +87,6 @@
       status: 'active',
     },
     {
-      id: 'user_employer_1',
-      email: 'employer@techcorp.demo',
-      password: 'password123',
-      role: USER_ROLES.EMPLOYER,
-      name: 'Priya Patel',
-      phone: '+91 91234 56789',
-      headline: 'Talent Acquisition Director',
-      companyId: 'comp_1',
-      companyName: 'TechCorp Innovations',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-      createdAt: '2026-01-05T09:00:00.000Z',
-      status: 'active',
-    },
-    {
       id: 'user_admin_1',
       email: 'admin@jobconnect.demo',
       password: 'password123',
@@ -600,10 +586,34 @@
     }
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[character]);
+  }
+
   let currentUser = getStored('currentUser', INITIAL_USERS[0]);
   let users = getStored('users', INITIAL_USERS);
-  let companies = getStored('companies', INITIAL_COMPANIES);
-  let jobs = getStored('jobs', INITIAL_JOBS);
+  function normalizeCompanies(list) {
+    return list.map(company => ({
+      ...company,
+      category: company.category || (
+        company.id === 'comp_2' ? 'FAANG' :
+          ['comp_3', 'comp_8'].includes(company.id) ? 'MNC' :
+            ['comp_4', 'comp_5', 'comp_6', 'comp_7', 'comp_9', 'comp_10'].includes(company.id) ? 'Top Startup' : 'Other'
+      ),
+      status: company.status || 'active',
+    }));
+  }
+  let companies = normalizeCompanies(getStored('companies', INITIAL_COMPANIES));
+  function normalizeJobs(list) {
+    return list.map(job => ({ ...job, status: job.status || 'active' }));
+  }
+  let jobs = normalizeJobs(getStored('jobs', INITIAL_JOBS));
   let applications = getStored('applications', INITIAL_APPLICATIONS);
   let chats = getStored('chats', INITIAL_CHATS);
   let interviews = getStored('interviews', INITIAL_INTERVIEWS);
@@ -628,7 +638,7 @@
     notify('auth:change', u);
   }
   function login(email, pwd) {
-    const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
+    const u = users.find(x => x.email.toLowerCase() === email.toLowerCase() && x.role !== USER_ROLES.EMPLOYER);
     if (u && (u.password === pwd || pwd === 'password123')) {
       setCurrentUser(u);
       return { success: true, user: u };
@@ -638,7 +648,6 @@
   function loginWithDemo(role) {
     let target = null;
     if (role === USER_ROLES.JOB_SEEKER) target = users.find(u => u.id === 'user_seeker_1');
-    else if (role === USER_ROLES.EMPLOYER) target = users.find(u => u.id === 'user_employer_1');
     else if (role === USER_ROLES.ADMIN) target = users.find(u => u.id === 'user_admin_1');
     if (target) {
       setCurrentUser(target);
@@ -659,9 +668,7 @@
       name: data.name,
       email: data.email,
       password: data.password,
-      role: data.role,
-      companyName: data.companyName,
-      companyId: data.role === USER_ROLES.EMPLOYER ? 'comp_1' : undefined,
+      role: USER_ROLES.JOB_SEEKER,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       profileCompletion: 40,
       skills: ['JavaScript', 'HTML5', 'CSS3'],
@@ -676,6 +683,9 @@
   }
 
   function getJobsList() { return jobs; }
+  function getVisibleJobs() {
+    return jobs.filter(job => job.status === 'active' && getCompanyById(job.companyId)?.status !== 'inactive');
+  }
   function getJobById(id) { return jobs.find(j => j.id === id); }
   function createJob(data) {
     const nj = {
@@ -740,6 +750,9 @@
   function applyToJob({ jobId, coverLetter, resumeUrl }) {
     const job = getJobById(jobId);
     if (!job) return { success: false, message: 'Job not found' };
+    if (job.status !== 'active' || getCompanyById(job.companyId)?.status === 'inactive') {
+      return { success: false, message: 'This job is no longer accepting applications' };
+    }
     const already = applications.some(a => a.jobId === jobId && a.seekerId === currentUser?.id);
     if (already) return { success: false, message: 'You have already applied for this position' };
 
@@ -767,13 +780,6 @@
     applications.unshift(na);
     setStored('applications', applications);
     updateJob(jobId, { applicantCount: (job.applicantCount || 0) + 1 });
-    addNotification({
-      userId: 'user_employer_1',
-      title: 'New Applicant Received 📥',
-      message: `${currentUser?.name || 'A candidate'} applied for ${job.title}.`,
-      type: 'application',
-      link: `#/employer/jobs/${jobId}/applicants`,
-    });
     notify('applications:change', na);
     return { success: true, application: na };
   }
@@ -796,8 +802,45 @@
     return null;
   }
 
-  function getCompaniesList() { return companies; }
+  function getCompaniesList() { return companies.filter(company => company.status !== 'inactive'); }
+  function getAllCompaniesList() { return companies; }
   function getCompanyById(id) { return companies.find(c => c.id === id); }
+  function createCompany(data) {
+    if (companies.some(company => company.name.toLowerCase() === data.name.trim().toLowerCase())) {
+      return null;
+    }
+    const company = {
+      id: `comp_${Date.now()}`,
+      name: data.name.trim(),
+      tagline: data.description.trim(),
+      logo: data.logo || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=120&auto=format&fit=crop&q=80',
+      banner: data.banner || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
+      industry: data.industry.trim(),
+      category: data.category,
+      size: data.size || 'Company size not listed',
+      founded: new Date().getFullYear(),
+      website: data.website || '#',
+      location: data.location.trim(),
+      rating: 0,
+      reviewCount: 0,
+      verified: true,
+      status: 'active',
+      description: data.description.trim(),
+      benefits: [],
+    };
+    companies.unshift(company);
+    setStored('companies', companies);
+    notify('companies:change', company);
+    return company;
+  }
+  function updateCompany(id, updates) {
+    const index = companies.findIndex(company => company.id === id);
+    if (index === -1) return null;
+    companies[index] = { ...companies[index], ...updates };
+    setStored('companies', companies);
+    notify('companies:change', companies[index]);
+    return companies[index];
+  }
   function getReviews(companyId) { return reviews.filter(r => r.companyId === companyId); }
   function addReview(data) {
     const nr = {
@@ -1342,9 +1385,6 @@
       if (user.role === USER_ROLES.JOB_SEEKER) {
         roleBadge = `<span class="badge badge-primary" style="font-size: 0.725rem;">Candidate</span>`;
         dashboardRoute = '#/seeker/dashboard';
-      } else if (user.role === USER_ROLES.EMPLOYER) {
-        roleBadge = `<span class="badge badge-secondary" style="font-size: 0.725rem;">Employer</span>`;
-        dashboardRoute = '#/employer/dashboard';
       } else if (user.role === USER_ROLES.ADMIN) {
         roleBadge = `<span class="badge badge-warning" style="font-size: 0.725rem;">Admin</span>`;
         dashboardRoute = '#/admin/dashboard';
@@ -1422,12 +1462,6 @@
                     <a href="#/seeker/saved-jobs" class="dropdown-item">${getIcon('bookmark')} Saved Jobs</a>
                     <a href="#/seeker/interviews" class="dropdown-item">${getIcon('video')} Interviews</a>
                     <a href="#/seeker/chat" class="dropdown-item">${getIcon('messageSquare')} Messages</a>
-                  ` : ''}
-                  ${user.role === USER_ROLES.EMPLOYER ? `
-                    <a href="#/employer/jobs" class="dropdown-item">${getIcon('briefcase')} Manage Jobs</a>
-                    <a href="#/employer/post-job" class="dropdown-item">${getIcon('plus')} Post New Job</a>
-                    <a href="#/employer/candidates" class="dropdown-item">${getIcon('users')} Talent Search</a>
-                    <a href="#/employer/analytics" class="dropdown-item">${getIcon('trendingUp')} Hiring Analytics</a>
                   ` : ''}
                   ${user.role === USER_ROLES.ADMIN ? `
                     <a href="#/admin/dashboard" class="dropdown-item">${getIcon('shield')} Platform Control</a>
@@ -1541,15 +1575,6 @@
               </ul>
             </div>
             <div>
-              <div class="footer-col-title">For Employers</div>
-              <ul class="footer-nav">
-                <li><a href="#/employer/post-job">Post a Vacancy</a></li>
-                <li><a href="#/employer/candidates">Talent Sourcing Pool</a></li>
-                <li><a href="#/employer/jobs">Applicant Management</a></li>
-                <li><a href="#/employer/analytics">Hiring Metrics & Funnel</a></li>
-              </ul>
-            </div>
-            <div>
               <div class="footer-col-title">Platform</div>
               <ul class="footer-nav">
                 <li><a href="#/login">Sign In / Demo Login</a></li>
@@ -1572,34 +1597,34 @@
     const saved = isJobSaved(job.id);
     const workplaceBadge = job.workplaceType === 'remote' ? 'badge-success' : job.workplaceType === 'hybrid' ? 'badge-primary' : 'badge-muted';
     return `
-      <div class="job-card ${job.featured ? 'featured' : ''}" data-job-id="${job.id}">
+      <div class="job-card ${job.featured ? 'featured' : ''}" data-job-id="${escapeHtml(job.id)}">
         <div>
           <div class="job-header">
-            <img src="${job.companyLogo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=80'}" class="job-company-logo" alt="${job.companyName}">
+            <img src="${escapeHtml(job.companyLogo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=80')}" class="job-company-logo" alt="${escapeHtml(job.companyName)}">
             <div style="flex: 1; min-width: 0;">
-              <a href="#/jobs/${job.id}" class="job-title" style="display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${job.title}</a>
-              <a href="#/companies/${job.companyId || 'comp_1'}" class="job-company-name">${job.companyName}</a>
+              <a href="#/jobs/${escapeHtml(job.id)}" class="job-title" style="display: block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHtml(job.title)}</a>
+              <a href="#/companies/${escapeHtml(job.companyId || 'comp_1')}" class="job-company-name">${escapeHtml(job.companyName)}</a>
             </div>
-            <button type="button" class="btn-icon job-save-btn" data-id="${job.id}" title="${saved ? 'Unsave' : 'Save'}" style="color: ${saved ? 'var(--primary)' : 'var(--text-subtle)'}; flex-shrink: 0;">
+            <button type="button" class="btn-icon job-save-btn" data-id="${escapeHtml(job.id)}" title="${saved ? 'Unsave' : 'Save'}" style="color: ${saved ? 'var(--primary)' : 'var(--text-subtle)'}; flex-shrink: 0;">
               ${saved ? getIcon('bookmarkFilled') : getIcon('bookmark')}
             </button>
           </div>
           <div class="job-details-meta">
-            <span class="meta-item">${getIcon('mapPin')} ${job.location}</span>
-            <span class="badge ${workplaceBadge}" style="text-transform: capitalize;">${job.workplaceType || 'on-site'}</span>
-            <span class="badge badge-muted" style="text-transform: capitalize;">${job.jobType || 'full-time'}</span>
+            <span class="meta-item">${getIcon('mapPin')} ${escapeHtml(job.location)}</span>
+            <span class="badge ${workplaceBadge}" style="text-transform: capitalize;">${escapeHtml(job.workplaceType || 'on-site')}</span>
+            <span class="badge badge-muted" style="text-transform: capitalize;">${escapeHtml(job.jobType || 'full-time')}</span>
             ${job.featured ? `<span class="badge badge-accent">Featured</span>` : ''}
           </div>
           <div class="job-skills">
-            ${(job.skills || []).slice(0, 4).map(skill => `<span class="badge badge-muted">${skill}</span>`).join('')}
+            ${(job.skills || []).slice(0, 4).map(skill => `<span class="badge badge-muted">${escapeHtml(skill)}</span>`).join('')}
             ${(job.skills || []).length > 4 ? `<span class="badge badge-muted">+${job.skills.length - 4}</span>` : ''}
           </div>
         </div>
         <div class="job-footer">
           <div class="job-salary">${formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}</div>
           <div style="display: flex; gap: 0.5rem;">
-            <a href="#/jobs/${job.id}" class="btn btn-outline btn-sm">Details</a>
-            <button type="button" class="btn btn-primary btn-sm job-quick-apply-btn" data-id="${job.id}">Apply</button>
+            <a href="#/jobs/${escapeHtml(job.id)}" class="btn btn-outline btn-sm">Details</a>
+            <button type="button" class="btn btn-primary btn-sm job-quick-apply-btn" data-id="${escapeHtml(job.id)}">Apply</button>
           </div>
         </div>
       </div>
@@ -1668,33 +1693,6 @@
     `;
   }
 
-  function renderEmployerSidebar(activeRoute = '') {
-    const hash = window.location.hash || activeRoute;
-    return `
-      <aside class="dashboard-sidebar">
-        <div class="sidebar-heading">Recruitment Hub</div>
-        <a href="#/employer/dashboard" class="sidebar-link ${hash === '#/employer/dashboard' ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('pieChart')} Overview</div>
-        </a>
-        <a href="#/employer/jobs" class="sidebar-link ${hash === '#/employer/jobs' ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('briefcase')} Manage Postings</div>
-        </a>
-        <a href="#/employer/post-job" class="sidebar-link ${hash === '#/employer/post-job' ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('plus')} Post a New Job</div>
-        </a>
-        <a href="#/employer/candidates" class="sidebar-link ${hash.includes('/candidates') ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('users')} Talent Sourcing</div>
-        </a>
-        <a href="#/employer/analytics" class="sidebar-link ${hash.includes('/analytics') ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('trendingUp')} Hiring Analytics</div>
-        </a>
-        <a href="#/seeker/chat" class="sidebar-link ${hash.includes('/chat') ? 'active' : ''}">
-          <div class="sidebar-link-content">${getIcon('messageSquare')} Candidate Chat</div>
-        </a>
-      </aside>
-    `;
-  }
-
   function renderAdminSidebar(activeRoute = '') {
     const hash = window.location.hash || activeRoute;
     return `
@@ -1719,7 +1717,7 @@
 
   // --- Landing Page ---
   function renderLandingPage() {
-    const allJobs = getJobsList();
+    const allJobs = getVisibleJobs();
     const featured = allJobs.slice(0, 6);
     const comps = getCompaniesList().slice(0, 6);
 
@@ -1767,12 +1765,12 @@
       <section class="container">
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="stat-number">40,000+</div>
+            <div class="stat-number">${allJobs.length}</div>
             <div style="font-weight: 600; font-size: 0.95rem;">Active Verified Jobs</div>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Across 50+ tech hubs</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number">2,400+</div>
+            <div class="stat-number">${getCompaniesList().length}</div>
             <div style="font-weight: 600; font-size: 0.95rem;">Companies Hiring</div>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">From startups to unicorns</div>
           </div>
@@ -1790,7 +1788,7 @@
       </section>
 
       <section class="container" style="margin: 4rem auto;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+        <div style="max-width: 760px; margin: 0 auto;">
           <div class="card card-hover" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary); padding: 2.5rem;">
             <div>
               <div style="width: 52px; height: 52px; border-radius: var(--radius-lg); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
@@ -1813,27 +1811,6 @@
             <a href="#/jobs" class="btn btn-primary" style="width: 100%;">Explore Tech Opportunities ${getIcon('arrowRight')}</a>
           </div>
 
-          <div class="card card-hover" style="display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--secondary); padding: 2.5rem;">
-            <div>
-              <div style="width: 52px; height: 52px; border-radius: var(--radius-lg); background: var(--secondary-light); color: #0891b2; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
-                ${getIcon('briefcase')}
-              </div>
-              <h3 style="font-size: 1.5rem; margin-bottom: 0.75rem;">I am an Employer / Recruiter</h3>
-              <p style="font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem;">Post vacancies, source pre-vetted candidates with skill filters, and schedule live video interviews.</p>
-              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
-                <li style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem;">
-                  <span style="color: var(--success);">${getIcon('checkCircle')}</span> Pre-Screen Candidates & Kanban Pipeline
-                </li>
-                <li style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem;">
-                  <span style="color: var(--success);">${getIcon('checkCircle')}</span> Schedule & Host 1-Click Video Interviews
-                </li>
-                <li style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem;">
-                  <span style="color: var(--success);">${getIcon('checkCircle')}</span> Detailed Sourcing Analytics & Conversion Funnels
-                </li>
-              </ul>
-            </div>
-            <a href="#/employer/post-job" class="btn btn-secondary" style="width: 100%;">Post a Job Today ${getIcon('arrowRight')}</a>
-          </div>
         </div>
       </section>
 
@@ -1951,9 +1928,8 @@
       const res = login(email, pwd);
       if (res.success) {
         toast.success(`Welcome back, ${res.user.name}! 👋`, 'Signed in successfully.');
-        if (res.user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
-        else if (res.user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
-        else window.location.hash = '#/admin/dashboard';
+        if (res.user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
+        else window.location.hash = '#/seeker/dashboard';
       } else {
         toast.error('Authentication Failed', res.message);
       }
@@ -1967,29 +1943,15 @@
           <div style="text-align: center; margin-bottom: 2rem;">
             <div class="nav-logo-icon" style="margin: 0 auto 1rem auto; width: 44px; height: 44px;">${getIcon('sparkles')}</div>
             <h2 style="font-size: 1.75rem; margin-bottom: 0.35rem;">Create Your Account</h2>
-            <p style="font-size: 0.9rem;">Join thousands of job seekers and visionary tech employers.</p>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; background: var(--bg-muted); padding: 0.35rem; border-radius: var(--radius-lg); margin-bottom: 1.75rem;">
-            <button type="button" id="role-seeker-btn" class="btn btn-sm btn-primary role-tab active" data-role="${USER_ROLES.JOB_SEEKER}">👤 Job Seeker</button>
-            <button type="button" id="role-employer-btn" class="btn btn-sm btn-outline role-tab" data-role="${USER_ROLES.EMPLOYER}">💼 Employer</button>
+            <p style="font-size: 0.9rem;">Create your account and start finding the right opportunity.</p>
           </div>
 
           <form id="signup-form">
-            <input type="hidden" id="signup-role" value="${USER_ROLES.JOB_SEEKER}">
             <div class="form-group">
               <label class="form-label" for="signup-name">Full Name</label>
               <div class="input-icon-wrapper">
                 <span class="icon">${getIcon('user')}</span>
                 <input type="text" id="signup-name" class="form-input" placeholder="Aarav Sharma" required>
-              </div>
-            </div>
-
-            <div id="company-field-group" class="form-group" style="display: none;">
-              <label class="form-label" for="signup-company">Company Name</label>
-              <div class="input-icon-wrapper">
-                <span class="icon">${getIcon('building')}</span>
-                <input type="text" id="signup-company" class="form-input" placeholder="TechCorp Innovations">
               </div>
             </div>
 
@@ -2023,40 +1985,15 @@
   }
 
   function attachSignupEvents() {
-    const roleTabs = document.querySelectorAll('.role-tab');
-    const roleInput = document.querySelector('#signup-role');
-    const companyGroup = document.querySelector('#company-field-group');
-    const companyInput = document.querySelector('#signup-company');
-
-    roleTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        roleTabs.forEach(t => { t.classList.remove('btn-primary', 'active'); t.classList.add('btn-outline'); });
-        tab.classList.add('btn-primary', 'active');
-        tab.classList.remove('btn-outline');
-        const r = tab.dataset.role;
-        roleInput.value = r;
-        if (r === USER_ROLES.EMPLOYER) {
-          companyGroup.style.display = 'block';
-          companyInput.setAttribute('required', 'true');
-        } else {
-          companyGroup.style.display = 'none';
-          companyInput.removeAttribute('required');
-        }
-      });
-    });
-
     document.querySelector('#signup-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.querySelector('#signup-name').value.trim();
       const email = document.querySelector('#signup-email').value.trim();
       const password = document.querySelector('#signup-password').value;
-      const role = roleInput.value;
-      const companyName = companyInput.value.trim();
-      const res = signup({ name, email, password, role, companyName });
+      const res = signup({ name, email, password, role: USER_ROLES.JOB_SEEKER });
       if (res.success) {
         toast.success(`Account Created! 🎉`, `Welcome to JobConnect, ${name}.`);
-        if (role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
-        else window.location.hash = '#/seeker/dashboard';
+        window.location.hash = '#/seeker/dashboard';
       } else {
         toast.error('Signup Error', res.message);
       }
@@ -2143,7 +2080,7 @@
 
   // --- Jobs Explorer Page ---
   function renderJobsPage(params = {}) {
-    const allJobs = getJobsList();
+    const allJobs = getVisibleJobs();
     const search = params.search || '';
     const location = params.location || '';
     const workplace = params.workplace || '';
@@ -2321,7 +2258,7 @@
   // --- Job Details Page ---
   function renderJobDetailsPage(jobId) {
     const job = getJobById(jobId);
-    if (!job) {
+    if (!job || job.status !== 'active' || getCompanyById(job.companyId)?.status === 'inactive') {
       return `
         <div class="container" style="padding: 4rem 1.25rem; text-align: center;">
           <h2>Job Not Found</h2>
@@ -2337,15 +2274,15 @@
         <div class="card" style="padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
             <div style="display: flex; gap: 1.25rem;">
-              <img src="${job.companyLogo}" style="width: 72px; height: 72px; border-radius: var(--radius-lg); object-fit: cover; border: 1px solid var(--border-color);" alt="${job.companyName}">
+              <img src="${escapeHtml(job.companyLogo)}" style="width: 72px; height: 72px; border-radius: var(--radius-lg); object-fit: cover; border: 1px solid var(--border-color);" alt="${escapeHtml(job.companyName)}">
               <div>
-                <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">${job.title}</h1>
+                <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">${escapeHtml(job.title)}</h1>
                 <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.95rem; color: var(--text-muted);">
-                  <a href="#/companies/${job.companyId || 'comp_1'}" style="font-weight: 700; color: var(--text-main);">${job.companyName}</a>
+                  <a href="#/companies/${escapeHtml(job.companyId || 'comp_1')}" style="font-weight: 700; color: var(--text-main);">${escapeHtml(job.companyName)}</a>
                   <span>•</span>
-                  <span>${getIcon('mapPin')} ${job.location}</span>
+                  <span>${getIcon('mapPin')} ${escapeHtml(job.location)}</span>
                   <span>•</span>
-                  <span style="color: var(--success); font-weight: 600;">Verified Employer</span>
+                  <span style="color: var(--success); font-weight: 600;">Verified Company</span>
                 </div>
               </div>
             </div>
@@ -2368,15 +2305,15 @@
             </div>
             <div>
               <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Workplace Type</div>
-              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${job.workplaceType}</div>
+              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${escapeHtml(job.workplaceType)}</div>
             </div>
             <div>
               <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Employment Type</div>
-              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${job.jobType}</div>
+              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${escapeHtml(job.jobType)}</div>
             </div>
             <div>
               <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Experience</div>
-              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${job.experienceLevel} Level</div>
+              <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-top: 2px; text-transform: capitalize;">${escapeHtml(job.experienceLevel)} Level</div>
             </div>
           </div>
         </div>
@@ -2384,31 +2321,31 @@
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
           <div class="card" style="padding: 2rem;">
             <h3 style="margin-bottom: 1rem; font-size: 1.25rem;">About the Opportunity</h3>
-            <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 1.5rem;">${job.description}</p>
+            <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 1.5rem;">${escapeHtml(job.description)}</p>
             <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Key Responsibilities</h4>
             <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.95rem; color: var(--text-muted);">
-              ${(job.responsibilities || []).map(r => `<li>${r}</li>`).join('')}
+              ${(job.responsibilities || []).map(r => `<li>${escapeHtml(r)}</li>`).join('')}
             </ul>
             <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Requirements</h4>
             <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.95rem; color: var(--text-muted);">
-              ${(job.requirements || []).map(rq => `<li>${rq}</li>`).join('')}
+              ${(job.requirements || []).map(rq => `<li>${escapeHtml(rq)}</li>`).join('')}
             </ul>
             <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Required Skills</h4>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-              ${(job.skills || []).map(s => `<span class="badge badge-primary" style="font-size: 0.85rem;">${s}</span>`).join('')}
+              ${(job.skills || []).map(s => `<span class="badge badge-primary" style="font-size: 0.85rem;">${escapeHtml(s)}</span>`).join('')}
             </div>
           </div>
 
           <div class="card" style="padding: 1.5rem; height: fit-content;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-              <img src="${job.companyLogo}" style="width: 52px; height: 52px; border-radius: var(--radius-md); object-fit: cover;" alt="${job.companyName}">
+              <img src="${escapeHtml(job.companyLogo)}" style="width: 52px; height: 52px; border-radius: var(--radius-md); object-fit: cover;" alt="${escapeHtml(job.companyName)}">
               <div>
-                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main);">${job.companyName}</div>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">${company.industry || 'Software'}</div>
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-main);">${escapeHtml(job.companyName)}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(company.industry || 'Software')}</div>
               </div>
             </div>
-            <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 1.25rem;">${company.tagline || ''}</p>
-            <a href="#/companies/${job.companyId || 'comp_1'}" class="btn btn-outline" style="width: 100%;">Explore Company ${getIcon('arrowRight')}</a>
+            <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 1.25rem;">${escapeHtml(company.tagline || '')}</p>
+            <a href="#/companies/${escapeHtml(job.companyId || 'comp_1')}" class="btn btn-outline" style="width: 100%;">Explore Company ${getIcon('arrowRight')}</a>
           </div>
         </div>
       </div>
@@ -2439,7 +2376,7 @@
     const user = getCurrentUser();
     if (!user) { window.location.hash = '#/login'; return ''; }
     const savedIds = user.savedJobs || [];
-    const saved = getJobsList().filter(j => savedIds.includes(j.id));
+    const saved = getVisibleJobs().filter(j => savedIds.includes(j.id));
 
     return `
       <div class="dashboard-layout">
@@ -2480,7 +2417,7 @@
     const applications = getSeekerApplications(user.id);
     const interviews = getSeekerInterviews(user.id);
     const savedCount = (user.savedJobs || []).length;
-    const recommendedJobs = getJobsList().slice(0, 4);
+    const recommendedJobs = getVisibleJobs().slice(0, 4);
 
     return `
       <div class="dashboard-layout">
@@ -2691,7 +2628,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
             <div>
               <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Track Applications</h1>
-              <p>Monitor your active recruitment pipelines.</p>
+              <p>Monitor the status of your submitted applications.</p>
             </div>
             <a href="#/jobs" class="btn btn-primary">${getIcon('plus')} Apply to More Roles</a>
           </div>
@@ -2758,13 +2695,27 @@
   function renderCompaniesPage(params = {}) {
     const comps = getCompaniesList();
     const search = params.search || '';
-    const filtered = search ? comps.filter(c => c.name.toLowerCase().includes(search.toLowerCase())) : comps;
+    const category = params.category || '';
+    const filtered = comps.filter(c => {
+      if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (category && c.category !== category) return false;
+      return true;
+    });
 
     return `
       <div class="container" style="padding: 2.5rem 1.25rem;">
         <div style="margin-bottom: 2rem;">
           <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Explore Tech Companies</h1>
-          <p>Discover top tech companies, verified employee reviews, and active job openings.</p>
+          <p>Discover MNCs, FAANG companies, top startups, and their active job openings.</p>
+        </div>
+
+        <div class="card" style="padding: 1rem; margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="search" id="company-search-input" class="form-input" style="flex: 1; min-width: 220px;" placeholder="Search companies..." value="${search}">
+          <select id="company-category-select" class="form-select" style="width: auto; min-width: 180px;">
+            <option value="">All company types</option>
+            ${['MNC', 'Top Startup', 'FAANG', 'Other'].map(type => `<option value="${type}" ${category === type ? 'selected' : ''}>${type}</option>`).join('')}
+          </select>
+          <button type="button" id="company-search-btn" class="btn btn-primary">${getIcon('search')} Search</button>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;">
@@ -2772,16 +2723,18 @@
             <div class="card card-hover" style="display: flex; flex-direction: column; justify-content: space-between; padding: 1.75rem;">
               <div>
                 <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem;">
-                  <img src="${comp.logo}" style="width: 56px; height: 56px; border-radius: var(--radius-md); object-fit: cover; border: 1px solid var(--border-color);" alt="${comp.name}">
+                  <img src="${escapeHtml(comp.logo)}" style="width: 56px; height: 56px; border-radius: var(--radius-md); object-fit: cover; border: 1px solid var(--border-color);" alt="${escapeHtml(comp.name)}">
                   <span class="badge badge-success">${getIcon('checkCircle')} Verified</span>
                 </div>
-                <a href="#/companies/${comp.id}" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">${comp.name}</a>
-                <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 0.75rem;">${comp.industry}</div>
-                <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">${comp.description}</p>
+                <a href="#/companies/${escapeHtml(comp.id)}" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 0.35rem;">${escapeHtml(comp.name)}</a>
+                <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 0.75rem;">${escapeHtml(comp.industry)}</div>
+                <span class="badge badge-primary">${escapeHtml(comp.category || 'Other')}</span>
+                <p style="font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;">${escapeHtml(comp.description)}</p>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">${getVisibleJobs().filter(job => job.companyId === comp.id).length} active hiring positions</div>
               </div>
               <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border-color); margin-top: auto;">
-                <span class="badge badge-primary">Top Rated</span>
-                <a href="#/companies/${comp.id}" class="btn btn-outline btn-sm">Explore Company</a>
+                <span class="badge badge-success">Active Company</span>
+                <a href="#/companies/${escapeHtml(comp.id)}" class="btn btn-outline btn-sm">Explore Company</a>
               </div>
             </div>
           `).join('')}
@@ -2790,27 +2743,42 @@
     `;
   }
 
-  function attachCompaniesEvents() {}
+  function attachCompaniesEvents() {
+    const searchCompanies = () => {
+      const params = new URLSearchParams();
+      const search = document.querySelector('#company-search-input')?.value.trim() || '';
+      const category = document.querySelector('#company-category-select')?.value || '';
+      if (search) params.set('search', search);
+      if (category) params.set('category', category);
+      window.location.hash = `#/companies?${params.toString()}`;
+    };
+    document.querySelector('#company-search-btn')?.addEventListener('click', searchCompanies);
+    document.querySelector('#company-search-input')?.addEventListener('keyup', event => {
+      if (event.key === 'Enter') searchCompanies();
+    });
+    document.querySelector('#company-category-select')?.addEventListener('change', searchCompanies);
+  }
 
   function renderCompanyDetailsPage(companyId) {
     const comp = getCompanyById(companyId);
-    if (!comp) return '<div class="container" style="padding: 4rem;"><h2>Company Not Found</h2></div>';
-    const openJobs = getJobsList().filter(j => j.companyId === comp.id);
+    if (!comp || comp.status === 'inactive') return '<div class="container" style="padding: 4rem;"><h2>Company Not Found</h2></div>';
+    const openJobs = getVisibleJobs().filter(j => j.companyId === comp.id);
     const revs = getReviews(comp.id);
 
     return `
       <div class="container" style="padding: 2.5rem 1.25rem;">
         <div style="height: 200px; border-radius: var(--radius-xl); overflow: hidden; margin-bottom: -40px;">
-          <img src="${comp.banner}" style="width: 100%; height: 100%; object-fit: cover;" alt="${comp.name}">
+          <img src="${escapeHtml(comp.banner)}" style="width: 100%; height: 100%; object-fit: cover;" alt="${escapeHtml(comp.name)}">
         </div>
 
         <div class="card" style="position: relative; z-index: 10; padding: 2rem; margin-bottom: 2rem;">
           <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem;">
             <div style="display: flex; gap: 1.5rem; align-items: flex-end;">
-              <img src="${comp.logo}" style="width: 80px; height: 80px; border-radius: var(--radius-lg); object-fit: cover; border: 3px solid var(--bg-card);" alt="${comp.name}">
+              <img src="${escapeHtml(comp.logo)}" style="width: 80px; height: 80px; border-radius: var(--radius-lg); object-fit: cover; border: 3px solid var(--bg-card);" alt="${escapeHtml(comp.name)}">
               <div>
-                <h1 style="font-size: 1.85rem;">${comp.name}</h1>
-                <p style="font-size: 0.95rem; color: var(--text-muted);">${comp.tagline}</p>
+                <h1 style="font-size: 1.85rem;">${escapeHtml(comp.name)}</h1>
+                <p style="font-size: 0.95rem; color: var(--text-muted);">${escapeHtml(comp.tagline || '')}</p>
+                <span class="badge badge-primary">${escapeHtml(comp.category || 'Other')}</span>
               </div>
             </div>
             <button type="button" id="write-review-btn" class="btn btn-outline">${getIcon('star')} Write Employee Review</button>
@@ -3251,336 +3219,14 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
 
   function attachSalariesEvents() {}
 
-  // --- Employer Pages (Dashboard, Jobs, Post Job, Applicants, Candidates, Analytics) ---
-  function renderEmployerDashboardPage() {
-    const user = getCurrentUser();
-    if (!user || (user.role !== USER_ROLES.EMPLOYER && user.role !== USER_ROLES.ADMIN)) {
-      window.location.hash = '#/login';
-      return '';
-    }
-    const myJobs = getJobsList();
-    const apps = getApplicationsList();
-
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/dashboard')}
-        <main class="dashboard-main">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <span class="badge badge-secondary" style="margin-bottom: 0.35rem;">Employer Sourcing Hub</span>
-              <h1 style="font-size: 1.85rem; margin-bottom: 0.25rem;">${user.companyName || 'TechCorp'} Overview</h1>
-              <p>Track candidate pipelines and job openings.</p>
-            </div>
-            <a href="#/employer/post-job" class="btn btn-primary">${getIcon('plus')} Post a New Job</a>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-            <div class="card" style="padding: 1.5rem;">
-              <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Active Postings</div>
-              <div style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-top: 0.5rem;">${myJobs.length}</div>
-            </div>
-            <div class="card" style="padding: 1.5rem;">
-              <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Applicants</div>
-              <div style="font-size: 2rem; font-weight: 800; color: var(--secondary); margin-top: 0.5rem;">${apps.length}</div>
-            </div>
-          </div>
-
-          <div class="card" style="padding: 1.75rem;">
-            <h3 style="margin-bottom: 1.25rem;">Candidate Submissions</h3>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead><tr><th>Candidate</th><th>Job</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>
-                  ${apps.map(a => `
-                    <tr>
-                      <td>${a.seekerName}</td>
-                      <td>${a.jobTitle}</td>
-                      <td><span class="badge badge-primary">${a.status}</span></td>
-                      <td><a href="#/employer/jobs/${a.jobId}/applicants" class="btn btn-sm btn-outline">Review</a></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachEmployerDashboardEvents() {}
-
-  function renderEmployerJobsPage() {
-    const user = getCurrentUser();
-    if (!user) { window.location.hash = '#/login'; return ''; }
-    const myJobs = getJobsList();
-
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/jobs')}
-        <main class="dashboard-main">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Manage Job Postings</h1>
-              <p>You have ${myJobs.length} active positions.</p>
-            </div>
-            <a href="#/employer/post-job" class="btn btn-primary">${getIcon('plus')} Post Job</a>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-            ${myJobs.map(j => `
-              <div class="card" style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                  <h3 style="font-size: 1.15rem;">${j.title}</h3>
-                  <div style="font-size: 0.85rem; color: var(--text-muted);">${j.location} • ${j.applicantCount || 0} Applicants</div>
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                  <a href="#/employer/jobs/${j.id}/applicants" class="btn btn-primary btn-sm">Applicants (${j.applicantCount || 0})</a>
-                  <button type="button" class="btn-icon del-job-btn" data-id="${j.id}" style="color: var(--danger);">${getIcon('trash')}</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachEmployerJobsEvents() {
-    document.querySelectorAll('.del-job-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (confirm('Delete job listing?')) {
-          deleteJob(btn.dataset.id);
-          toast.info('Job Deleted', '');
-          window.location.reload();
-        }
-      });
-    });
-  }
-
-  function renderPostJobPage() {
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/post-job')}
-        <main class="dashboard-main">
-          <h1 style="font-size: 1.85rem; margin-bottom: 1.5rem;">Post a Tech Vacancy</h1>
-          <div class="card" style="padding: 2.5rem; max-width: 800px;">
-            <form id="post-job-form">
-              <div class="form-group">
-                <label class="form-label">Job Title</label>
-                <input type="text" id="pj-title" class="form-input" placeholder="e.g. Senior Frontend Engineer" required>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label class="form-label">Location</label>
-                  <input type="text" id="pj-loc" class="form-input" placeholder="e.g. Bangalore, Remote" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Workplace</label>
-                  <select id="pj-wp" class="form-select">
-                    <option value="hybrid">Hybrid</option>
-                    <option value="remote">Remote</option>
-                    <option value="on-site">On-Site</option>
-                  </select>
-                </div>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                  <label class="form-label">Min Salary (INR)</label>
-                  <input type="number" id="pj-min" class="form-input" placeholder="1800000" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Max Salary (INR)</label>
-                  <input type="number" id="pj-max" class="form-input" placeholder="2800000" required>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Skills (comma separated)</label>
-                <input type="text" id="pj-skills" class="form-input" placeholder="React, TypeScript, Node.js" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea id="pj-desc" class="form-textarea" rows="4" placeholder="Describe the role..." required></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 1rem;">Publish Job Opening</button>
-            </form>
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachPostJobEvents() {
-    document.querySelector('#post-job-form')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.querySelector('#pj-title').value.trim();
-      const location = document.querySelector('#pj-loc').value.trim();
-      const workplaceType = document.querySelector('#pj-wp').value;
-      const salaryMin = Number(document.querySelector('#pj-min').value);
-      const salaryMax = Number(document.querySelector('#pj-max').value);
-      const skills = document.querySelector('#pj-skills').value.split(',').map(s => s.trim()).filter(Boolean);
-      const description = document.querySelector('#pj-desc').value.trim();
-
-      createJob({
-        title,
-        location,
-        workplaceType,
-        jobType: 'full-time',
-        experienceLevel: 'senior',
-        salaryMin,
-        salaryMax,
-        skills,
-        description,
-        responsibilities: ['Architect scalable web applications', 'Collaborate across teams'],
-        requirements: ['3+ years in tech stack'],
-      });
-
-      toast.success('Job Published! 🚀', 'Your opening is now live.');
-      window.location.hash = '#/employer/jobs';
-    });
-  }
-
-  function renderJobApplicantsPage(jobId) {
-    const job = getJobById(jobId) || { id: jobId, title: 'Job' };
-    const apps = getJobApplications(jobId);
-
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/jobs')}
-        <main class="dashboard-main">
-          <h1 style="font-size: 1.85rem; margin-bottom: 0.5rem;">Applicants for ${job.title}</h1>
-          <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem;">
-            ${apps.map(a => `
-              <div class="card" style="padding: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                  <div>
-                    <h3 style="font-size: 1.15rem;">${a.seekerName}</h3>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">${a.seekerEmail}</div>
-                  </div>
-                  <select class="form-select app-st-select" data-id="${a.id}" style="width: auto;">
-                    <option value="${APPLICATION_STATUS.APPLIED}" ${a.status === APPLICATION_STATUS.APPLIED ? 'selected' : ''}>Applied</option>
-                    <option value="${APPLICATION_STATUS.UNDER_REVIEW}" ${a.status === APPLICATION_STATUS.UNDER_REVIEW ? 'selected' : ''}>Under Review</option>
-                    <option value="${APPLICATION_STATUS.SHORTLISTED}" ${a.status === APPLICATION_STATUS.SHORTLISTED ? 'selected' : ''}>Shortlisted</option>
-                    <option value="${APPLICATION_STATUS.INTERVIEW}" ${a.status === APPLICATION_STATUS.INTERVIEW ? 'selected' : ''}>Interview Scheduled</option>
-                    <option value="${APPLICATION_STATUS.HIRED}" ${a.status === APPLICATION_STATUS.HIRED ? 'selected' : ''}>Hired</option>
-                  </select>
-                </div>
-                <div style="font-size: 0.875rem; background: var(--bg-muted); padding: 0.75rem; border-radius: 6px;">${a.coverLetter}</div>
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-                  <a href="#/seeker/chat" class="btn btn-sm btn-outline">${getIcon('messageSquare')} Message</a>
-                  <button type="button" class="btn btn-sm btn-primary sched-btn" data-id="${a.id}" data-name="${a.seekerName}">${getIcon('video')} Schedule Video</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachJobApplicantsEvents(jobId) {
-    const job = getJobById(jobId);
-    document.querySelectorAll('.app-st-select').forEach(sel => {
-      sel.addEventListener('change', (e) => {
-        updateApplicationStatus(sel.dataset.id, e.target.value);
-        toast.success('Updated', `Stage updated to ${e.target.value}`);
-      });
-    });
-    document.querySelectorAll('.sched-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        openScheduleInterviewModal({ candidate: { id: btn.dataset.id, name: btn.dataset.name }, job, onScheduled: () => window.location.reload() });
-      });
-    });
-  }
-
-  function renderCandidateSearchPage(params = {}) {
-    const seekers = getAllUsers().filter(u => u.role === USER_ROLES.JOB_SEEKER);
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/candidates')}
-        <main class="dashboard-main">
-          <h1 style="font-size: 1.85rem; margin-bottom: 1.5rem;">Talent Sourcing Directory</h1>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
-            ${seekers.map(s => `
-              <div class="card card-hover" style="padding: 1.5rem;">
-                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem;">
-                  <img src="${s.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover;" alt="${s.name}">
-                  <div>
-                    <h3 style="font-size: 1.1rem;">${s.name}</h3>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">${s.location || 'India'}</div>
-                  </div>
-                </div>
-                <div style="font-weight: 600; color: var(--primary); font-size: 0.875rem; margin-bottom: 0.5rem;">${s.headline || ''}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem;">
-                  ${(s.skills || []).map(sk => `<span class="badge badge-muted">${sk}</span>`).join('')}
-                </div>
-                <button type="button" class="btn btn-primary btn-sm invite-cand-btn" data-name="${s.name}" style="width: 100%;">
-                  ${getIcon('send')} Invite to Apply
-                </button>
-              </div>
-            `).join('')}
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachCandidateSearchEvents() {
-    document.querySelectorAll('.invite-cand-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        toast.success('Invitation Dispatched! ✉️', `Invited ${btn.dataset.name} to apply.`);
-      });
-    });
-  }
-
-  function renderEmployerAnalyticsPage() {
-    return `
-      <div class="dashboard-layout">
-        ${renderEmployerSidebar('#/employer/analytics')}
-        <main class="dashboard-main">
-          <h1 style="font-size: 1.85rem; margin-bottom: 1.5rem;">Hiring Analytics & Funnels</h1>
-          <div class="card" style="padding: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Recruitment Funnel Conversion</h3>
-            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.35rem;">
-                  <span>1. Applications Received</span><span>184 (100%)</span>
-                </div>
-                <div style="height: 10px; width: 100%; background: var(--bg-muted); border-radius: 9999px; overflow: hidden;">
-                  <div style="width: 100%; height: 100%; background: var(--primary);"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.35rem;">
-                  <span>2. Shortlisted</span><span>78 (42%)</span>
-                </div>
-                <div style="height: 10px; width: 100%; background: var(--bg-muted); border-radius: 9999px; overflow: hidden;">
-                  <div style="width: 42%; height: 100%; background: var(--secondary);"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.35rem;">
-                  <span>3. Hired</span><span>14 (7.6%)</span>
-                </div>
-                <div style="height: 10px; width: 100%; background: var(--bg-muted); border-radius: 9999px; overflow: hidden;">
-                  <div style="width: 7.6%; height: 100%; background: var(--success);"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    `;
-  }
-
-  function attachEmployerAnalyticsEvents() {}
-
   // --- Admin Console ---
   function renderAdminDashboardPage() {
     const user = getCurrentUser();
     if (!user || user.role !== USER_ROLES.ADMIN) { window.location.hash = '#/login'; return ''; }
     const uList = getAllUsers();
     const jList = getJobsList();
+    const companyList = getAllCompaniesList();
+    const activeCompanies = companyList.filter(company => company.status !== 'inactive');
 
     return `
       <div class="dashboard-layout">
@@ -3590,6 +3236,7 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
             <div>
               <span class="badge badge-warning">System Admin Console</span>
               <h1 style="font-size: 1.85rem; margin-top: 0.25rem;">Platform Administration</h1>
+              <p style="margin-top: 0.35rem; color: var(--text-muted);">Manage user accounts, company listings, and the active jobs shown to job seekers.</p>
             </div>
             <span class="badge badge-success">${getIcon('checkCircle')} Systems Healthy</span>
           </div>
@@ -3616,6 +3263,159 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
               </table>
             </div>
           </div>
+
+          <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 0.5rem;">Add a Company</h3>
+            <p style="margin-bottom: 1.25rem;">New active companies immediately appear in the seeker company directory.</p>
+            <form id="admin-company-form">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-name">Company name</label>
+                  <input id="admin-company-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-category">Company type</label>
+                  <select id="admin-company-category" class="form-select" required>
+                    <option value="MNC">MNC</option>
+                    <option value="Top Startup">Top Startup</option>
+                    <option value="FAANG">FAANG</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-industry">Industry</label>
+                  <input id="admin-company-industry" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-location">Location</label>
+                  <input id="admin-company-location" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-website">Website</label>
+                  <input type="url" id="admin-company-website" class="form-input" placeholder="https://example.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-company-logo">Logo image URL (optional)</label>
+                  <input type="url" id="admin-company-logo" class="form-input" placeholder="https://example.com/logo.png">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="admin-company-description">Company description</label>
+                <textarea id="admin-company-description" class="form-textarea" rows="3" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">${getIcon('plus')} Add Active Company</button>
+            </form>
+          </div>
+
+          <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1.25rem;">Company Directory Management</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead><tr><th>Company</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  ${companyList.map(company => `
+                    <tr>
+                      <td>${escapeHtml(company.name)}</td>
+                      <td>
+                        <select class="form-select admin-company-category" data-id="${escapeHtml(company.id)}" aria-label="Company type">
+                          ${['MNC', 'Top Startup', 'FAANG', 'Other'].map(type => `<option value="${type}" ${(company.category || 'Other') === type ? 'selected' : ''}>${type}</option>`).join('')}
+                        </select>
+                      </td>
+                      <td><span class="badge ${company.status === 'inactive' ? 'badge-danger' : 'badge-success'}">${company.status === 'inactive' ? 'Inactive' : 'Active'}</span></td>
+                      <td>
+                        <button type="button" class="btn btn-sm btn-outline admin-company-category-btn" data-id="${escapeHtml(company.id)}">Save Type</button>
+                        <button type="button" class="btn btn-sm btn-outline admin-company-status-btn" data-id="${escapeHtml(company.id)}" data-status="${company.status === 'inactive' ? 'active' : 'inactive'}">${company.status === 'inactive' ? 'Activate' : 'Deactivate'}</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 0.5rem;">Add Active Hiring</h3>
+            <p style="margin-bottom: 1.25rem;">Published jobs appear in seeker job search and company pages.</p>
+            ${activeCompanies.length ? `
+              <form id="admin-job-form">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-company">Company</label>
+                    <select id="admin-job-company" class="form-select" required>
+                      ${activeCompanies.map(company => `<option value="${escapeHtml(company.id)}">${escapeHtml(company.name)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-title">Job title</label>
+                    <input id="admin-job-title" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-location">Location</label>
+                    <input id="admin-job-location" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-salary-min">Minimum annual salary (INR)</label>
+                    <input type="number" min="0" id="admin-job-salary-min" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-salary-max">Maximum annual salary (INR)</label>
+                    <input type="number" min="0" id="admin-job-salary-max" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-workplace">Workplace</label>
+                    <select id="admin-job-workplace" class="form-select">
+                      <option value="hybrid">Hybrid</option>
+                      <option value="remote">Remote</option>
+                      <option value="on-site">On-site</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-experience">Experience level</label>
+                    <select id="admin-job-experience" class="form-select">
+                      <option value="junior">Junior</option>
+                      <option value="mid" selected>Mid-level</option>
+                      <option value="senior">Senior</option>
+                      <option value="lead">Lead</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="admin-job-skills">Skills (comma separated)</label>
+                    <input id="admin-job-skills" class="form-input" placeholder="React, JavaScript">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="admin-job-description">Description</label>
+                  <textarea id="admin-job-description" class="form-textarea" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">${getIcon('plus')} Publish Active Job</button>
+              </form>
+            ` : '<p>Add or activate a company before publishing a job.</p>'}
+          </div>
+
+          <div class="card" style="padding: 1.75rem;">
+            <h3 style="margin-bottom: 1.25rem;">Manage Active Hiring</h3>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead><tr><th>Job title</th><th>Company</th><th>Location</th><th>Status</th><th>Update</th></tr></thead>
+                <tbody>
+                  ${jList.map(job => `
+                    <tr>
+                      <td><input class="form-input admin-job-title" data-id="${escapeHtml(job.id)}" value="${escapeHtml(job.title)}" aria-label="Job title"></td>
+                      <td>${escapeHtml(job.companyName)}</td>
+                      <td><input class="form-input admin-job-location" data-id="${escapeHtml(job.id)}" value="${escapeHtml(job.location)}" aria-label="Job location"></td>
+                      <td>
+                        <select class="form-select admin-job-status" data-id="${escapeHtml(job.id)}" aria-label="Job status">
+                          <option value="active" ${job.status === 'active' ? 'selected' : ''}>Active</option>
+                          <option value="paused" ${job.status !== 'active' ? 'selected' : ''}>Paused</option>
+                        </select>
+                      </td>
+                      <td><button type="button" class="btn btn-sm btn-outline admin-job-update-btn" data-id="${escapeHtml(job.id)}">Save</button></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </main>
       </div>
     `;
@@ -3627,6 +3427,100 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
         const u = toggleUserStatus(btn.dataset.id);
         if (u) {
           toast.info('Status Updated', `User is now ${u.status}.`);
+          window.location.reload();
+        }
+      });
+    });
+
+    document.querySelector('#admin-company-form')?.addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.querySelector('#admin-company-name').value.trim();
+      const company = createCompany({
+        name,
+        category: document.querySelector('#admin-company-category').value,
+        industry: document.querySelector('#admin-company-industry').value.trim(),
+        location: document.querySelector('#admin-company-location').value.trim(),
+        website: document.querySelector('#admin-company-website').value.trim(),
+        logo: document.querySelector('#admin-company-logo').value.trim(),
+        description: document.querySelector('#admin-company-description').value.trim(),
+      });
+      if (!company) {
+        toast.error('Company not added', 'Please check the company details and try again.');
+        return;
+      }
+      toast.success('Company Added', `${name} is now visible in the company directory.`);
+      window.location.reload();
+    });
+
+    document.querySelectorAll('.admin-company-status-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const updated = updateCompany(button.dataset.id, { status: button.dataset.status });
+        if (updated) {
+          toast.success('Company Updated', `${updated.name} is now ${updated.status}.`);
+          window.location.reload();
+        }
+      });
+    });
+
+    document.querySelectorAll('.admin-company-category-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const selector = document.querySelector(`.admin-company-category[data-id="${button.dataset.id}"]`);
+        const updated = updateCompany(button.dataset.id, { category: selector.value });
+        if (updated) {
+          toast.success('Company Type Updated', `${updated.name} is categorized as ${updated.category}.`);
+          window.location.reload();
+        }
+      });
+    });
+
+    document.querySelector('#admin-job-form')?.addEventListener('submit', event => {
+      event.preventDefault();
+      const company = getCompanyById(document.querySelector('#admin-job-company').value);
+      if (!company || company.status === 'inactive') {
+        toast.error('Job not published', 'Select an active company before publishing the job.');
+        return;
+      }
+      const salaryMin = Number(document.querySelector('#admin-job-salary-min').value) || 0;
+      const salaryMax = Number(document.querySelector('#admin-job-salary-max').value) || 0;
+      if (salaryMin && salaryMax && salaryMin > salaryMax) {
+        toast.error('Invalid salary range', 'Minimum salary must not exceed maximum salary.');
+        return;
+      }
+      createJob({
+        companyId: company.id,
+        companyName: company.name,
+        companyLogo: company.logo,
+        title: document.querySelector('#admin-job-title').value.trim(),
+        location: document.querySelector('#admin-job-location').value.trim(),
+        salaryMin,
+        salaryMax,
+        salaryCurrency: 'INR',
+        workplaceType: document.querySelector('#admin-job-workplace').value,
+        jobType: 'full-time',
+        experienceLevel: document.querySelector('#admin-job-experience').value,
+        skills: document.querySelector('#admin-job-skills').value.split(',').map(skill => skill.trim()).filter(Boolean),
+        description: document.querySelector('#admin-job-description').value.trim(),
+        responsibilities: [],
+        requirements: [],
+        status: 'active',
+      });
+      toast.success('Job Published', 'The active job is now visible to job seekers.');
+      window.location.reload();
+    });
+
+    document.querySelectorAll('.admin-job-update-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.id;
+        const title = document.querySelector(`.admin-job-title[data-id="${id}"]`).value.trim();
+        const location = document.querySelector(`.admin-job-location[data-id="${id}"]`).value.trim();
+        const status = document.querySelector(`.admin-job-status[data-id="${id}"]`).value;
+        if (!title || !location) {
+          toast.error('Job not updated', 'Job title and location are required.');
+          return;
+        }
+        const updated = updateJob(id, { title, location, status });
+        if (updated) {
+          toast.success('Hiring Updated', `${updated.title} is now ${updated.status}.`);
           window.location.reload();
         }
       });
@@ -3662,7 +3556,7 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
           window.location.hash = '#/seeker/dashboard';
           return;
         } else if (user.role === USER_ROLES.EMPLOYER) {
-          window.location.hash = '#/employer/dashboard';
+          window.location.hash = '#/jobs';
           return;
         } else if (user.role === USER_ROLES.ADMIN) {
           window.location.hash = '#/admin/dashboard';
@@ -3674,16 +3568,21 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     const [hashPath, queryString] = fullHash.split('?');
     const params = Object.fromEntries(new URLSearchParams(queryString || '').entries());
 
+    if (hashPath.startsWith('#/employer')) {
+      window.location.hash = '#/jobs';
+      return;
+    }
+
     // If user is already logged in and visits login or signup, redirect to their dashboard
     if ((hashPath === '#/login' || hashPath === '#/signup') && user) {
       if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
-      else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
+      else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/jobs';
       else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
       return;
     }
 
-    // Protect seeker, employer, and admin routes
-    if (!user && (hashPath.startsWith('#/seeker') || hashPath.startsWith('#/employer') || hashPath.startsWith('#/admin'))) {
+    // Protect seeker and admin routes
+    if (!user && (hashPath.startsWith('#/seeker') || hashPath.startsWith('#/admin'))) {
       toast.info('Sign In Required', 'Please sign in to access this page.');
       window.location.hash = '#/login';
       return;
@@ -3764,25 +3663,6 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     } else if (hashPath === '#/seeker/notifications') {
       html = renderNotificationsPage();
       attachFn = attachNotificationsEvents;
-    } else if (hashPath === '#/employer/dashboard') {
-      html = renderEmployerDashboardPage();
-      attachFn = attachEmployerDashboardEvents;
-    } else if (hashPath === '#/employer/jobs') {
-      html = renderEmployerJobsPage();
-      attachFn = attachEmployerJobsEvents;
-    } else if (hashPath === '#/employer/post-job') {
-      html = renderPostJobPage();
-      attachFn = attachPostJobEvents;
-    } else if (hashPath.startsWith('#/employer/jobs/') && hashPath.endsWith('/applicants')) {
-      const jobId = hashPath.replace('#/employer/jobs/', '').replace('/applicants', '');
-      html = renderJobApplicantsPage(jobId);
-      attachFn = () => attachJobApplicantsEvents(jobId);
-    } else if (hashPath === '#/employer/candidates') {
-      html = renderCandidateSearchPage(params);
-      attachFn = attachCandidateSearchEvents;
-    } else if (hashPath === '#/employer/analytics') {
-      html = renderEmployerAnalyticsPage();
-      attachFn = attachEmployerAnalyticsEvents;
     } else if (hashPath === '#/admin/dashboard') {
       html = renderAdminDashboardPage();
       attachFn = attachAdminDashboardEvents;
@@ -3809,6 +3689,15 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     });
 
     window.addEventListener('hashchange', handleRoute);
+    window.addEventListener('storage', event => {
+      if (event.key === 'jobconnect_companies') {
+        companies = normalizeCompanies(getStored('companies', INITIAL_COMPANIES));
+        handleRoute();
+      } else if (event.key === 'jobconnect_jobs') {
+        jobs = normalizeJobs(getStored('jobs', INITIAL_JOBS));
+        handleRoute();
+      }
+    });
     handleRoute();
   }
 
