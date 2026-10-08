@@ -35,11 +35,12 @@ Open your browser at `http://localhost:3000` (or the URL printed by your server)
 
 ---
 
-## 🔑 Demo Accounts & 1-Click Login
+## 🔐 Authentication & First-Visit Experience
 
-On the Sign In page (`#/login`), quick 1-click credential auto-fill buttons are provided for instant testing:
+When users first visit the platform without being logged in, they are immediately directed to the **Sign In** screen (`#/login`). Users can sign in using existing registered accounts or create a new account for free via **Get Started** (`#/signup`).
 
-| Role | Demo Email | Password | Access & Features |
+### Pre-configured Accounts:
+| Role | Email | Password | Access & Features |
 |:---|:---|:---|:---|
 | 👤 **Job Seeker** | `seeker@jobconnect.demo` | `password123` | Profile CRUD, Applications, AI ATS Resume Analyzer, Live Video Interview Room, Chat |
 | 💼 **Employer / Recruiter** | `employer@techcorp.demo` | `password123` | Post Jobs, Manage Listings, Candidate Pipeline Stepper, Talent Pool Search, Hiring Analytics |

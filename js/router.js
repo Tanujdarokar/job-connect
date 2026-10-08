@@ -34,12 +34,46 @@ import { renderAdminDashboardPage, attachAdminDashboardEvents } from './pages/ad
 import { renderNotFoundPage, attachNotFoundEvents } from './pages/notFound.js';
 
 export function handleRoute() {
-  const fullHash = window.location.hash || '#/';
+  let fullHash = window.location.hash;
+  const user = getCurrentUser();
+
+  // If user is not logged in and visits root or empty hash, redirect to login page first
+  if (!fullHash || fullHash === '#' || fullHash === '#/') {
+    if (!user) {
+      window.location.hash = '#/login';
+      return;
+    } else {
+      if (user.role === USER_ROLES.JOB_SEEKER) {
+        window.location.hash = '#/seeker/dashboard';
+        return;
+      } else if (user.role === USER_ROLES.EMPLOYER) {
+        window.location.hash = '#/employer/dashboard';
+        return;
+      } else if (user.role === USER_ROLES.ADMIN) {
+        window.location.hash = '#/admin/dashboard';
+        return;
+      }
+    }
+  }
+
   const [hashPath, queryString] = fullHash.split('?');
   const searchParams = new URLSearchParams(queryString || '');
   const params = Object.fromEntries(searchParams.entries());
 
-  const user = getCurrentUser();
+  // If logged in user visits login or signup, redirect to their dashboard
+  if ((hashPath === '#/login' || hashPath === '#/signup') && user) {
+    if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
+    else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
+    else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
+    return;
+  }
+
+  // Protect seeker, employer, and admin routes
+  if (!user && (hashPath.startsWith('#/seeker') || hashPath.startsWith('#/employer') || hashPath.startsWith('#/admin'))) {
+    window.location.hash = '#/login';
+    return;
+  }
+
   const pageContainer = document.querySelector('#page-content');
   const navbarContainer = document.querySelector('#navbar-container');
   const footerContainer = document.querySelector('#footer-container');

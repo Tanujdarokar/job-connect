@@ -19,31 +19,13 @@ export function renderLoginPage() {
           <p style="font-size: 0.9rem;">${t('auth.loginSubtitle')}</p>
         </div>
 
-        <!-- Quick Demo Accounts -->
-        <div style="background: var(--bg-muted); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1.75rem;">
-          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.65rem;">
-            ${t('auth.demoFillHeader')}
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-            <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.JOB_SEEKER}" style="font-size: 0.75rem;">
-              👤 Seeker
-            </button>
-            <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.EMPLOYER}" style="font-size: 0.75rem;">
-              💼 Employer
-            </button>
-            <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.ADMIN}" style="font-size: 0.75rem;">
-              🛡️ Admin
-            </button>
-          </div>
-        </div>
-
         <!-- Standard Login Form -->
         <form id="login-form">
           <div class="form-group">
             <label class="form-label" for="login-email">${t('auth.emailLabel')}</label>
             <div class="input-icon-wrapper">
               <span class="icon">${getIcon('mail')}</span>
-              <input type="email" id="login-email" class="form-input" placeholder="you@example.com" value="seeker@jobconnect.demo" required>
+              <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required autocomplete="email">
             </div>
           </div>
 
@@ -54,7 +36,7 @@ export function renderLoginPage() {
             </div>
             <div class="input-icon-wrapper">
               <span class="icon">${getIcon('shield')}</span>
-              <input type="password" id="login-password" class="form-input" placeholder="••••••••" value="password123" required>
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
             </div>
           </div>
 
@@ -80,20 +62,6 @@ export function renderLoginPage() {
 }
 
 export function attachLoginEvents() {
-  // Demo Login buttons
-  document.querySelectorAll('.demo-login-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const role = btn.dataset.role;
-      const user = loginWithDemo(role);
-      if (user) {
-        toast.success(`Welcome, ${user.name}! 👋`, `Signed in as ${user.role.toUpperCase()}.`);
-        if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
-        else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
-        else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
-      }
-    });
-  });
-
   // Standard Form Submit
   const form = document.querySelector('#login-form');
   if (form) {

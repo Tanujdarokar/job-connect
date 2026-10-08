@@ -1902,23 +1902,12 @@
             <p style="font-size: 0.9rem;">Sign in to access your JobConnect dashboard</p>
           </div>
 
-          <div style="background: var(--bg-muted); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1.75rem;">
-            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.65rem;">
-              Quick Test Demo Logins:
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-              <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.JOB_SEEKER}" style="font-size: 0.75rem;">👤 Seeker</button>
-              <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.EMPLOYER}" style="font-size: 0.75rem;">💼 Employer</button>
-              <button type="button" class="btn btn-outline btn-sm demo-login-btn" data-role="${USER_ROLES.ADMIN}" style="font-size: 0.75rem;">🛡️ Admin</button>
-            </div>
-          </div>
-
           <form id="login-form">
             <div class="form-group">
               <label class="form-label" for="login-email">Email Address</label>
               <div class="input-icon-wrapper">
                 <span class="icon">${getIcon('mail')}</span>
-                <input type="email" id="login-email" class="form-input" placeholder="you@example.com" value="seeker@jobconnect.demo" required>
+                <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required autocomplete="email">
               </div>
             </div>
 
@@ -1929,7 +1918,7 @@
               </div>
               <div class="input-icon-wrapper">
                 <span class="icon">${getIcon('shield')}</span>
-                <input type="password" id="login-password" class="form-input" placeholder="••••••••" value="password123" required>
+                <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
               </div>
             </div>
 
@@ -1955,19 +1944,6 @@
   }
 
   function attachLoginEvents() {
-    document.querySelectorAll('.demo-login-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const role = btn.dataset.role;
-        const user = loginWithDemo(role);
-        if (user) {
-          toast.success(`Welcome, ${user.name}! 👋`, `Signed in as ${user.role.toUpperCase()}.`);
-          if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
-          else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
-          else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
-        }
-      });
-    });
-
     document.querySelector('#login-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.querySelector('#login-email').value.trim();
@@ -3673,9 +3649,45 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
   // ==========================================================================
 
   function handleRoute() {
-    const fullHash = window.location.hash || '#/';
+    let fullHash = window.location.hash;
+    const user = getCurrentUser();
+
+    // If user is not logged in and visits root or empty hash, redirect to login page first
+    if (!fullHash || fullHash === '#' || fullHash === '#/') {
+      if (!user) {
+        window.location.hash = '#/login';
+        return;
+      } else {
+        if (user.role === USER_ROLES.JOB_SEEKER) {
+          window.location.hash = '#/seeker/dashboard';
+          return;
+        } else if (user.role === USER_ROLES.EMPLOYER) {
+          window.location.hash = '#/employer/dashboard';
+          return;
+        } else if (user.role === USER_ROLES.ADMIN) {
+          window.location.hash = '#/admin/dashboard';
+          return;
+        }
+      }
+    }
+
     const [hashPath, queryString] = fullHash.split('?');
     const params = Object.fromEntries(new URLSearchParams(queryString || '').entries());
+
+    // If user is already logged in and visits login or signup, redirect to their dashboard
+    if ((hashPath === '#/login' || hashPath === '#/signup') && user) {
+      if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
+      else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/employer/dashboard';
+      else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
+      return;
+    }
+
+    // Protect seeker, employer, and admin routes
+    if (!user && (hashPath.startsWith('#/seeker') || hashPath.startsWith('#/employer') || hashPath.startsWith('#/admin'))) {
+      toast.info('Sign In Required', 'Please sign in to access this page.');
+      window.location.hash = '#/login';
+      return;
+    }
 
     const pageContainer = document.querySelector('#page-content');
     const navbarContainer = document.querySelector('#navbar-container');
