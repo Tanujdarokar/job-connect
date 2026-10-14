@@ -94,20 +94,12 @@ When users first visit the platform without being logged in, they are immediatel
 
 ```
 job-portal/
-├── index.html              # Main HTML5 entry point & SPA layout shell
+├── index.html              # HTML5 entry point & accessible SPA shell
 ├── css/
-│   └── style.css           # Vanilla CSS design system (Variables, Dark/Light Themes, Glassmorphism, Flex/Grid)
+│   └── style.css           # Modern design system (Tokens, Dark/Light Themes, Fluid Transitions)
 ├── js/
-│   ├── app.js              # Unified standalone runtime engine (Router, Store, UI, Pages, Modals, SVGs)
-│   ├── state.js            # Initial dataset & reactive state store
-│   ├── router.js           # Client-side hash-based SPA routing controller
-│   ├── icons.js            # Scalable inline SVG icon library
-│   ├── toast.js            # Toast notification management system
-│   ├── modal.js            # Universal modal popup dialog manager
-│   ├── i18n.js             # Multi-language translation dictionaries & helpers
-│   ├── components/         # Reusable UI component templates (Navbar, Footer, JobCard)
-│   └── pages/              # Individual page modules (Home, Jobs, Profile, AI Tools, etc.)
-└── README.md               # Project documentation & reference guide
+│   └── app.js              # Standalone vanilla JS engine (Router, Reactive Store, Modals, Views)
+└── README.md               # Documentation & setup guide
 ```
 
 ---

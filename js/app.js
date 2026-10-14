@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * JobConnect - Next-Gen Tech Career & Hiring Platform
+ * JobConnect - Curated Tech Career & Hiring Platform
  * 100% Pure Vanilla HTML5, CSS3 & Modern JavaScript Application (Zero Framework)
  * ============================================================================
  */
@@ -128,7 +128,7 @@
     {
       id: 'comp_1',
       name: 'TechCorp Innovations',
-      tagline: 'Empowering enterprise transformation with next-gen AI cloud solutions',
+      tagline: 'Enterprise cloud infrastructure and intelligent developer platforms',
       logo: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120&auto=format&fit=crop&q=80',
       banner: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
       industry: 'Software & Cloud Services',
@@ -1107,11 +1107,19 @@
 
   function closeModal() {
     if (activeModalBackdrop) {
-      activeModalBackdrop.remove();
+      const el = activeModalBackdrop;
       activeModalBackdrop = null;
-      document.body.style.overflow = '';
+      el.classList.remove('show');
+      setTimeout(() => {
+        el.remove();
+        document.body.style.overflow = '';
+      }, 180);
     }
   }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && activeModalBackdrop) closeModal();
+  });
 
   function openApplyModal(job) {
     const user = getCurrentUser();
@@ -1295,8 +1303,110 @@
 
           const newRev = addReview({ companyId: company.id, rating, title, pros, cons });
           closeModal();
-          toast.success('Review Published! ⭐', 'Thank you for sharing your workplace insights.');
+          toast.success('Review Published', 'Thank you for sharing your workplace insights.');
           if (typeof onAdded === 'function') onAdded(newRev);
+        });
+      },
+    });
+  }
+
+  function openAddExperienceModal(onSaved) {
+    openModal({
+      title: 'Add Work Experience',
+      size: 'md',
+      bodyHtml: `
+        <form id="exp-modal-form">
+          <div class="form-group">
+            <label class="form-label">Job Title</label>
+            <input type="text" id="exp-modal-title" class="form-input" placeholder="e.g. Senior Frontend Engineer" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Company Name</label>
+            <input type="text" id="exp-modal-company" class="form-input" placeholder="e.g. Acme Tech" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" id="exp-modal-location" class="form-input" placeholder="e.g. Bengaluru, Karnataka (or Remote)">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Start Date</label>
+              <input type="text" id="exp-modal-start" class="form-input" placeholder="e.g. 2022-03" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">End Date</label>
+              <input type="text" id="exp-modal-end" class="form-input" placeholder="e.g. Present" value="Present">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Key Highlights & Responsibilities</label>
+            <textarea id="exp-modal-desc" class="form-textarea" placeholder="Briefly describe what you built, scaled, or optimized..."></textarea>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">${getIcon('check')} Add Experience</button>
+          </div>
+        </form>
+      `,
+      onMount: (modalEl) => {
+        modalEl.querySelector('.modal-cancel-btn')?.addEventListener('click', closeModal);
+        modalEl.querySelector('#exp-modal-form')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const title = modalEl.querySelector('#exp-modal-title').value.trim();
+          const company = modalEl.querySelector('#exp-modal-company').value.trim();
+          const location = modalEl.querySelector('#exp-modal-location').value.trim();
+          const startDate = modalEl.querySelector('#exp-modal-start').value.trim();
+          const endDate = modalEl.querySelector('#exp-modal-end').value.trim() || 'Present';
+          const description = modalEl.querySelector('#exp-modal-desc').value.trim();
+          const item = { id: `exp_${Date.now()}`, title, company, location, startDate, endDate, current: endDate === 'Present', description };
+          closeModal();
+          if (typeof onSaved === 'function') onSaved(item);
+        });
+      },
+    });
+  }
+
+  function openAddEducationModal(onSaved) {
+    openModal({
+      title: 'Add Education',
+      size: 'md',
+      bodyHtml: `
+        <form id="edu-modal-form">
+          <div class="form-group">
+            <label class="form-label">Degree / Qualification</label>
+            <input type="text" id="edu-modal-degree" class="form-input" placeholder="e.g. B.Tech in Computer Engineering" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Institution / University</label>
+            <input type="text" id="edu-modal-inst" class="form-input" placeholder="e.g. Gujarat Technological University" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label">Years</label>
+              <input type="text" id="edu-modal-year" class="form-input" placeholder="e.g. 2017 - 2021" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Score / CGPA</label>
+              <input type="text" id="edu-modal-score" class="form-input" placeholder="e.g. 8.6 CGPA">
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+            <button type="submit" class="btn btn-primary">${getIcon('check')} Add Education</button>
+          </div>
+        </form>
+      `,
+      onMount: (modalEl) => {
+        modalEl.querySelector('.modal-cancel-btn')?.addEventListener('click', closeModal);
+        modalEl.querySelector('#edu-modal-form')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const degree = modalEl.querySelector('#edu-modal-degree').value.trim();
+          const institution = modalEl.querySelector('#edu-modal-inst').value.trim();
+          const year = modalEl.querySelector('#edu-modal-year').value.trim();
+          const score = modalEl.querySelector('#edu-modal-score').value.trim();
+          const item = { id: `edu_${Date.now()}`, degree, institution, year, score };
+          closeModal();
+          if (typeof onSaved === 'function') onSaved(item);
         });
       },
     });
@@ -1316,10 +1426,10 @@
       signup: 'Get Started',
       logout: 'Sign Out',
       dashboard: 'Dashboard',
-      heroBadge: '✨ #1 Next-Gen AI Career Ecosystem in India',
+      heroBadge: '💼 Verified Tech Careers & Direct Engineering Roles',
       heroTitle1: 'Connect with Opportunities That',
       heroTitleHighlight: 'Redefine Your Career',
-      heroSubtitle: 'Discover 40,000+ top engineering, design, and product roles at visionary startups and Fortune 500 tech companies.',
+      heroSubtitle: 'Discover 40,000+ verified engineering, design, and product roles at leading startups and established tech companies.',
     },
     hi: {
       findJobs: 'नौकरियां खोजें',
@@ -1330,7 +1440,7 @@
       signup: 'शुरुआत करें',
       logout: 'साइन आउट',
       dashboard: 'डैशबोर्ड',
-      heroBadge: '✨ भारत का #1 नेक्स्ट-जेन AI करियर प्लेटफॉर्म',
+      heroBadge: '💼 सत्यापित तकनीकी नौकरियां और सीधी भर्ती',
       heroTitle1: 'ऐसे अवसरों से जुड़ें जो आपके करियर को',
       heroTitleHighlight: 'नई ऊंचाइयों पर ले जाएं',
       heroSubtitle: 'शीर्ष इंजीनियरिंग, डिज़ाइन और उत्पाद भूमिकाओं की खोज करें और भारत की अग्रणी कंपनियों में काम करें।',
@@ -1344,7 +1454,7 @@
       signup: 'શરૂ કરો',
       logout: 'સાઇન આઉટ',
       dashboard: 'ડેશબોર્ડ',
-      heroBadge: '✨ ભારતમાં #1 આધુનિક AI કરિયર પ્લેટફોર્મ',
+      heroBadge: '💼 ચકાસાયેલ ટેક નોકરીઓ અને સીધી ભરતી',
       heroTitle1: 'તમારી કારકિર્દીને નવી દિશા આપતી',
       heroTitleHighlight: 'શ્રેષ્ઠ તકો શોધો',
       heroSubtitle: 'ટેક, ડિઝાઇન અને પ્રોડક્ટ ક્ષેત્રે ટોચની કંપનીઓ સાથે જોડાવો અને તમારા સપના સાકાર કરો.',
@@ -1562,7 +1672,7 @@
                 <div class="nav-logo-icon">${getIcon('sparkles')}</div>
                 <span>Job<span style="color: var(--primary);">Connect</span></span>
               </a>
-              <p>India’s next-generation career and hiring platform. Powering seamless connections between high-caliber tech talent and fast-growing companies with AI tools and live video screening.</p>
+              <p>A modern career platform connecting skilled engineers and designers with high-growth tech teams across India. Built with transparent salary data, resume ATS matching, and direct communication.</p>
             </div>
             <div>
               <div class="footer-col-title">For Candidates</div>
@@ -2497,7 +2607,8 @@
     const user = getCurrentUser();
     if (!user) { window.location.hash = '#/login'; return ''; }
     const skills = user.skills || [];
-    const exp = user.experience || [];
+    const experience = user.experience || [];
+    const education = user.education || [];
 
     return `
       <div class="dashboard-layout">
@@ -2505,17 +2616,18 @@
         <main class="dashboard-main">
           <div style="margin-bottom: 2rem;">
             <h1 style="font-size: 1.85rem; margin-bottom: 0.35rem;">Candidate Profile</h1>
-            <p>Keep your profile, work experience, and skills up-to-date.</p>
+            <p>Manage your professional profile, skills, experience, and uploaded resume.</p>
           </div>
 
           <form id="profile-form">
+            <!-- Basic Information -->
             <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
               <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
-                <img src="${user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-light);" alt="${user.name}">
+                <img src="${user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}" style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-light);" alt="${user.name}">
                 <div>
                   <h3 style="font-size: 1.25rem;">${user.name}</h3>
                   <p style="font-size: 0.875rem;">${user.email}</p>
-                  <div class="badge badge-success" style="margin-top: 0.35rem;">Strength: ${user.profileCompletion || 85}%</div>
+                  <div class="badge badge-success" style="margin-top: 0.35rem;">Profile Strength: ${user.profileCompletion || 85}%</div>
                 </div>
               </div>
 
@@ -2541,30 +2653,115 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="prof-bio">Bio & About</label>
+                <label class="form-label" for="prof-bio">Bio & Summary</label>
                 <textarea id="prof-bio" class="form-textarea" rows="3">${user.bio || 'Passionate software engineer building modern high-scale apps.'}</textarea>
               </div>
-            </div>
 
-            <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
-              <h3 style="font-size: 1.25rem; margin-bottom: 1rem;">Core Skills</h3>
-              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;">
-                ${skills.map((s, idx) => `
-                  <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
-                    ${s} <button type="button" class="remove-skill-btn" data-index="${idx}" style="cursor: pointer; color: var(--primary); font-weight: bold; border: none; background: none; margin-left: 4px;">×</button>
-                  </span>
-                `).join('')}
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button type="submit" class="btn btn-primary">${getIcon('check')} Save Details</button>
               </div>
-              <div style="display: flex; gap: 0.75rem;">
-                <input type="text" id="new-skill-input" class="form-input" placeholder="Add skill (e.g. Next.js, Docker)..." style="max-width: 320px;">
-                <button type="button" id="add-skill-btn" class="btn btn-secondary">${getIcon('plus')} Add Skill</button>
-              </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-              <button type="submit" class="btn btn-primary btn-lg">${getIcon('check')} Save Profile</button>
             </div>
           </form>
+
+          <!-- Core Skills -->
+          <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.4rem;">Skills & Technologies</h3>
+            <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">Add core skills to improve role recommendations and ATS compatibility.</p>
+
+            <div id="skills-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem;">
+              ${skills.map((s, idx) => `
+                <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                  ${s}
+                  <button type="button" class="remove-skill-btn" data-index="${idx}" style="cursor: pointer; color: var(--primary); font-weight: bold; border: none; background: none; margin-left: 4px;" title="Remove ${s}">×</button>
+                </span>
+              `).join('')}
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <input type="text" id="new-skill-input" class="form-input" placeholder="Add skill (e.g. TypeScript, GraphQL, Docker)..." style="max-width: 340px;">
+              <button type="button" id="add-skill-btn" class="btn btn-secondary">${getIcon('plus')} Add Skill</button>
+            </div>
+          </div>
+
+          <!-- Resume Attachment -->
+          <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.4rem;">Active Resume</h3>
+            <p style="font-size: 0.875rem; margin-bottom: 1.25rem;">Used for 1-click applications and real-time ATS keyword matching.</p>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; border: 2px dashed var(--border-color); border-radius: var(--radius-lg); background: var(--bg-muted); flex-wrap: wrap; gap: 1rem;">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                  ${getIcon('fileText')}
+                </div>
+                <div>
+                  <div style="font-weight: 700; font-size: 0.95rem;" id="resume-name-display">${user.resume?.fileName || 'Aarav_Sharma_FullStack_Resume.pdf'}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted);" id="resume-meta-display">${user.resume?.fileSize || '420 KB'} • Uploaded recently</div>
+                </div>
+              </div>
+              <div>
+                <input type="file" id="resume-file-input" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                <button type="button" id="upload-resume-trigger" class="btn btn-outline">
+                  ${getIcon('upload')} Replace Resume
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Work Experience Timeline -->
+          <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h3 style="font-size: 1.25rem;">Work Experience</h3>
+                <p style="font-size: 0.875rem;">Your professional work history and technical achievements.</p>
+              </div>
+              <button type="button" id="add-exp-btn" class="btn btn-sm btn-outline-primary">
+                ${getIcon('plus')} Add Experience
+              </button>
+            </div>
+
+            <div id="experience-list" style="display: flex; flex-direction: column; gap: 1rem;">
+              ${experience.length > 0 ? experience.map((item, idx) => `
+                <div style="padding: 1.25rem; background: var(--bg-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--primary); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1rem;">${item.title}</div>
+                    <div style="font-size: 0.875rem; color: var(--primary); font-weight: 600;">${item.company} ${item.location ? `• ${item.location}` : ''}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${item.startDate} — ${item.endDate || 'Present'}</div>
+                    ${item.description ? `<p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; line-height: 1.5;">${item.description}</p>` : ''}
+                  </div>
+                  <button type="button" class="btn-icon delete-exp-btn" data-index="${idx}" style="color: var(--danger); border: none; background: transparent;" title="Delete item">
+                    ${getIcon('trash')}
+                  </button>
+                </div>
+              `).join('') : '<div style="color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">No work experience listed yet. Click "Add Experience" to list your roles.</div>'}
+            </div>
+          </div>
+
+          <!-- Education History -->
+          <div class="card" style="padding: 2rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h3 style="font-size: 1.25rem;">Education</h3>
+                <p style="font-size: 0.875rem;">Degrees, certifications, and academic qualifications.</p>
+              </div>
+              <button type="button" id="add-edu-btn" class="btn btn-sm btn-outline-primary">
+                ${getIcon('plus')} Add Education
+              </button>
+            </div>
+
+            <div id="education-list" style="display: flex; flex-direction: column; gap: 1rem;">
+              ${education.length > 0 ? education.map((item, idx) => `
+                <div style="padding: 1.25rem; background: var(--bg-muted); border-radius: var(--radius-lg); border-left: 3px solid var(--secondary); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                  <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1rem;">${item.degree}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-main); font-weight: 600;">${item.institution}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${item.year} ${item.score ? `• ${item.score}` : ''}</div>
+                  </div>
+                  <button type="button" class="btn-icon delete-edu-btn" data-index="${idx}" style="color: var(--danger); border: none; background: transparent;" title="Delete item">
+                    ${getIcon('trash')}
+                  </button>
+                </div>
+              `).join('') : '<div style="color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">No education entries added yet.</div>'}
+            </div>
+          </div>
         </main>
       </div>
     `;
@@ -2573,27 +2770,59 @@
   function attachProfileEvents() {
     const user = getCurrentUser();
     if (!user) return;
-    let currentSkills = [...(user.skills || [])];
 
-    document.querySelectorAll('.remove-skill-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = Number(btn.dataset.index);
-        currentSkills.splice(idx, 1);
-        updateUserProfile({ skills: currentSkills });
-        window.location.reload();
+    // Attach skill removal
+    const bindSkillRemove = () => {
+      document.querySelectorAll('.remove-skill-btn').forEach(btn => {
+        btn.onclick = () => {
+          const idx = Number(btn.dataset.index);
+          const currentSkills = [...(getCurrentUser()?.skills || [])];
+          currentSkills.splice(idx, 1);
+          updateUserProfile({ skills: currentSkills });
+          const container = document.querySelector('#skills-list');
+          if (container) {
+            container.innerHTML = currentSkills.map((s, i) => `
+              <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                ${s}
+                <button type="button" class="remove-skill-btn" data-index="${i}" style="cursor: pointer; color: var(--primary); font-weight: bold; border: none; background: none; margin-left: 4px;" title="Remove ${s}">×</button>
+              </span>
+            `).join('');
+            bindSkillRemove();
+          }
+          toast.info('Skill Removed', 'Skills list updated.');
+        };
       });
-    });
+    };
+    bindSkillRemove();
 
-    document.querySelector('#add-skill-btn')?.addEventListener('click', () => {
+    // Add Skill
+    const addSkill = () => {
       const input = document.querySelector('#new-skill-input');
       const val = input?.value.trim();
+      const currentSkills = [...(getCurrentUser()?.skills || [])];
       if (val && !currentSkills.includes(val)) {
         currentSkills.push(val);
         updateUserProfile({ skills: currentSkills });
-        window.location.reload();
+        if (input) input.value = '';
+        const container = document.querySelector('#skills-list');
+        if (container) {
+          container.innerHTML = currentSkills.map((s, i) => `
+            <span class="badge badge-primary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+              ${s}
+              <button type="button" class="remove-skill-btn" data-index="${i}" style="cursor: pointer; color: var(--primary); font-weight: bold; border: none; background: none; margin-left: 4px;" title="Remove ${s}">×</button>
+            </span>
+          `).join('');
+          bindSkillRemove();
+        }
+        toast.success('Skill Added', `${val} added to your profile.`);
       }
+    };
+    document.querySelector('#add-skill-btn')?.addEventListener('click', addSkill);
+    document.querySelector('#new-skill-input')?.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addSkill(); }
     });
 
+    // Profile Details Form Submit
     document.querySelector('#profile-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.querySelector('#prof-name').value.trim();
@@ -2602,7 +2831,72 @@
       const location = document.querySelector('#prof-location').value.trim();
       const bio = document.querySelector('#prof-bio').value.trim();
       updateUserProfile({ name, phone, headline, location, bio });
-      toast.success('Profile Saved! ✨', 'Your profile details have been updated.');
+      toast.success('Profile Saved', 'Your profile details have been updated.');
+    });
+
+    // Resume Upload Trigger
+    const fileInput = document.querySelector('#resume-file-input');
+    document.querySelector('#upload-resume-trigger')?.addEventListener('click', () => {
+      fileInput?.click();
+    });
+    fileInput?.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileSizeKb = Math.round(file.size / 1024) || 350;
+        const newResume = {
+          fileName: file.name,
+          fileSize: `${fileSizeKb} KB`,
+          uploadedAt: new Date().toISOString(),
+        };
+        updateUserProfile({ resume: newResume });
+        const nameEl = document.querySelector('#resume-name-display');
+        const metaEl = document.querySelector('#resume-meta-display');
+        if (nameEl) nameEl.textContent = newResume.fileName;
+        if (metaEl) metaEl.textContent = `${newResume.fileSize} • Uploaded just now`;
+        toast.success('Resume Uploaded', `${file.name} is now your active resume.`);
+      }
+    });
+
+    // Experience: Add and Delete
+    document.querySelector('#add-exp-btn')?.addEventListener('click', () => {
+      openAddExperienceModal((newItem) => {
+        const currentExp = [...(getCurrentUser()?.experience || [])];
+        currentExp.unshift(newItem);
+        updateUserProfile({ experience: currentExp });
+        toast.success('Experience Added', `${newItem.title} added to your timeline.`);
+        handleRoute();
+      });
+    });
+    document.querySelectorAll('.delete-exp-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = Number(btn.dataset.index);
+        const currentExp = [...(getCurrentUser()?.experience || [])];
+        const removed = currentExp.splice(idx, 1)[0];
+        updateUserProfile({ experience: currentExp });
+        toast.info('Experience Removed', `${removed?.title || 'Role'} removed.`);
+        handleRoute();
+      };
+    });
+
+    // Education: Add and Delete
+    document.querySelector('#add-edu-btn')?.addEventListener('click', () => {
+      openAddEducationModal((newItem) => {
+        const currentEdu = [...(getCurrentUser()?.education || [])];
+        currentEdu.unshift(newItem);
+        updateUserProfile({ education: currentEdu });
+        toast.success('Education Added', `${newItem.degree} added.`);
+        handleRoute();
+      });
+    });
+    document.querySelectorAll('.delete-edu-btn').forEach(btn => {
+      btn.onclick = () => {
+        const idx = Number(btn.dataset.index);
+        const currentEdu = [...(getCurrentUser()?.education || [])];
+        const removed = currentEdu.splice(idx, 1)[0];
+        updateUserProfile({ education: currentEdu });
+        toast.info('Education Removed', `${removed?.degree || 'Entry'} removed.`);
+        handleRoute();
+      };
     });
   }
 
@@ -2814,27 +3108,54 @@
     const comp = getCompanyById(companyId);
     if (!comp) return;
     document.querySelector('#write-review-btn')?.addEventListener('click', () => {
-      openAddReviewModal(comp, () => window.location.reload());
+      openAddReviewModal(comp, () => handleRoute());
     });
   }
 
   // --- AI Resume Analyzer ---
+  const ATS_ROLE_REQUIREMENTS = {
+    'Senior Frontend Engineer': {
+      title: 'Senior Frontend Engineer (React & Next.js)',
+      required: ['React', 'TypeScript', 'JavaScript', 'Next.js', 'Redux', 'CSS', 'Performance', 'Git', 'REST'],
+      tips: 'Highlight web performance metrics (Core Web Vitals, bundle reduction) and state architecture.',
+    },
+    'Full Stack Node Developer': {
+      title: 'Full Stack Node.js Developer',
+      required: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Docker', 'AWS', 'REST', 'Git'],
+      tips: 'Emphasize end-to-end API design, database indexing, and containerized deployments.',
+    },
+    'Python Backend Lead': {
+      title: 'Python & Go Cloud Architect',
+      required: ['Python', 'Go', 'Docker', 'Kubernetes', 'PostgreSQL', 'AWS', 'Microservices', 'Redis'],
+      tips: 'Detail distributed system scaling, asynchronous queues, and cloud infrastructure.',
+    },
+  };
+
   function renderAiResumeAnalyzerPage() {
+    const user = getCurrentUser();
+    const resumeText = user ? `${user.name || ''}
+${user.headline || 'Senior Full Stack React & Node Developer'}
+Skills: ${(user.skills || []).join(', ')}
+Experience: ${(user.experience || []).map(e => `${e.title} at ${e.company}. ${e.description || ''}`).join(' ')}` : `Aarav Sharma
+Senior Full Stack React & Node Developer with 5+ years of experience.
+Skills: React, JavaScript, TypeScript, Node.js, Redux, PostgreSQL, Docker, AWS.
+Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS apps.`;
+
     return `
       <div class="container" style="padding: 2.5rem 1.25rem;">
         <div style="text-align: center; max-width: 700px; margin: 0 auto 2.5rem auto;">
-          <div class="badge badge-accent" style="margin-bottom: 0.5rem; padding: 0.4rem 0.85rem;">
-            ${getIcon('sparkles')} Next-Gen AI ATS Engine
+          <div class="badge badge-primary" style="margin-bottom: 0.5rem; padding: 0.35rem 0.85rem;">
+            Resume ATS Matcher
           </div>
-          <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">AI Resume ATS Analyzer</h1>
-          <p>Scan your resume against target tech roles and identify missing keywords.</p>
+          <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Resume Keyword & ATS Analyzer</h1>
+          <p>Scan your resume text against target role expectations to reveal matched keywords and critical skill gaps.</p>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 2rem; align-items: start;">
           <div class="card" style="padding: 2rem;">
-            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Resume Input & Target Role</h3>
+            <h3 style="font-size: 1.2rem; margin-bottom: 1.25rem;">Resume Content & Target Role</h3>
             <div class="form-group">
-              <label class="form-label">Target Role</label>
+              <label class="form-label" for="ai-target-role">Target Engineering Role</label>
               <select id="ai-target-role" class="form-select">
                 <option value="Senior Frontend Engineer">Senior Frontend Engineer (React & Next.js)</option>
                 <option value="Full Stack Node Developer">Full Stack Node.js Developer</option>
@@ -2842,29 +3163,27 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Resume Text</label>
-              <textarea id="ai-resume-text" class="form-textarea" rows="10" placeholder="Paste your resume markdown or plain text here...">Aarav Sharma
-Senior Full Stack React & Node Developer with 5+ years of experience.
-Skills: React, JavaScript, TypeScript, Node.js, Redux, PostgreSQL, Docker, AWS.
-Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS apps.</textarea>
+              <label class="form-label" for="ai-resume-text">Resume Text Content</label>
+              <textarea id="ai-resume-text" class="form-textarea" rows="11" placeholder="Paste your resume markdown, plain text, or profile content here...">${resumeText}</textarea>
             </div>
             <button type="button" id="ai-analyze-btn" class="btn btn-primary btn-lg" style="width: 100%;">
-              ${getIcon('sparkles')} Run AI Evaluation
+              ${getIcon('sparkles')} Analyze Resume Match
             </button>
           </div>
 
-          <div class="card" style="padding: 2rem;">
+          <div class="card" style="padding: 2rem;" id="ai-results-panel">
             <div style="text-align: center; margin-bottom: 2rem;">
-              <div class="score-circle" style="--score: 88; margin-bottom: 1rem;">
+              <div class="score-circle" id="ai-score-circle" style="--score: 88; margin-bottom: 1rem;">
                 <div class="score-number" id="ai-score-val">88%</div>
-                <div class="score-label">ATS Score</div>
+                <div class="score-label">ATS Match</div>
               </div>
-              <h3 style="font-size: 1.25rem;">Strong Match</h3>
-              <p style="font-size: 0.875rem; color: var(--text-muted);">Passes 88% of standard ATS filters with high keyword density.</p>
+              <h3 style="font-size: 1.25rem;" id="ai-match-headline">Strong Match</h3>
+              <p style="font-size: 0.875rem; color: var(--text-muted);" id="ai-match-summary">Your resume demonstrates strong keyword alignment for this position.</p>
             </div>
+
             <div style="margin-bottom: 1.25rem;">
               <div style="font-weight: 700; font-size: 0.875rem; color: var(--success-text); margin-bottom: 0.5rem;">Matched Keywords:</div>
-              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;" id="ai-matched-tags">
                 <span class="badge badge-success">React</span>
                 <span class="badge badge-success">TypeScript</span>
                 <span class="badge badge-success">Next.js</span>
@@ -2872,8 +3191,17 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
                 <span class="badge badge-success">Docker</span>
               </div>
             </div>
-            <div style="background: var(--bg-muted); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted);">
-              💡 <strong>AI Tip:</strong> Quantify performance gains (e.g. reduced page load by 40%) to boost recruiter impressions.
+
+            <div style="margin-bottom: 1.25rem;">
+              <div style="font-weight: 700; font-size: 0.875rem; color: var(--warning-text); margin-bottom: 0.5rem;">Recommended Additions:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;" id="ai-missing-tags">
+                <span class="badge badge-muted">Performance</span>
+                <span class="badge badge-muted">REST</span>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-muted); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted);" id="ai-tips-box">
+              <strong>Optimization Tip:</strong> Quantify performance gains (e.g. reduced page load by 40%) to boost recruiter impressions.
             </div>
           </div>
         </div>
@@ -2882,77 +3210,160 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
   }
 
   function attachAiResumeEvents() {
-    document.querySelector('#ai-analyze-btn')?.addEventListener('click', () => {
-      toast.info('AI Analyzing...', 'Scanning ATS keywords.');
-      setTimeout(() => {
-        toast.success('Analysis Complete! ⭐', 'Resume scored 92% match rate.');
-        const scoreEl = document.querySelector('#ai-score-val');
-        if (scoreEl) scoreEl.textContent = '92%';
-      }, 600);
-    });
+    const runAnalysis = () => {
+      const roleKey = document.querySelector('#ai-target-role')?.value || 'Senior Frontend Engineer';
+      const roleSpec = ATS_ROLE_REQUIREMENTS[roleKey] || ATS_ROLE_REQUIREMENTS['Senior Frontend Engineer'];
+      const text = (document.querySelector('#ai-resume-text')?.value || '').toLowerCase();
+
+      const matched = [];
+      const missing = [];
+      roleSpec.required.forEach(kw => {
+        if (text.includes(kw.toLowerCase())) matched.push(kw);
+        else missing.push(kw);
+      });
+
+      const score = Math.max(25, Math.min(98, Math.round((matched.length / roleSpec.required.length) * 100)));
+
+      const circle = document.querySelector('#ai-score-circle');
+      const scoreVal = document.querySelector('#ai-score-val');
+      const headline = document.querySelector('#ai-match-headline');
+      const summary = document.querySelector('#ai-match-summary');
+      const matchedContainer = document.querySelector('#ai-matched-tags');
+      const missingContainer = document.querySelector('#ai-missing-tags');
+      const tipsBox = document.querySelector('#ai-tips-box');
+
+      if (circle) circle.style.setProperty('--score', score);
+      if (scoreVal) scoreVal.textContent = `${score}%`;
+
+      if (score >= 80) {
+        if (headline) headline.textContent = 'Excellent Match';
+        if (summary) summary.textContent = 'High keyword density aligned with hiring manager expectations.';
+      } else if (score >= 60) {
+        if (headline) headline.textContent = 'Moderate Match';
+        if (summary) summary.textContent = 'Good foundational skills; adding recommended keywords will boost ranking.';
+      } else {
+        if (headline) headline.textContent = 'Needs Keyword Optimization';
+        if (summary) summary.textContent = 'Several core technical proficiencies for this role are currently missing.';
+      }
+
+      if (matchedContainer) {
+        matchedContainer.innerHTML = matched.length > 0 ? matched.map(m => `<span class="badge badge-success">${m}</span>`).join('') : '<span style="color: var(--text-muted); font-size: 0.85rem;">No exact keyword matches found</span>';
+      }
+
+      if (missingContainer) {
+        missingContainer.innerHTML = missing.length > 0 ? missing.map(m => `<span class="badge badge-warning">${m}</span>`).join('') : '<span class="badge badge-success">All target keywords covered!</span>';
+      }
+
+      if (tipsBox) {
+        tipsBox.innerHTML = `<strong>Role Tip:</strong> ${roleSpec.tips}`;
+      }
+
+      toast.success('Analysis Complete', `Resume scored ${score}% match for ${roleSpec.title}.`);
+    };
+
+    document.querySelector('#ai-analyze-btn')?.addEventListener('click', runAnalysis);
+    document.querySelector('#ai-target-role')?.addEventListener('change', runAnalysis);
   }
 
   // --- Live Video Interview Room ---
   let timerInt = null;
   let videoAnimId = null;
+  let isMicMuted = false;
+  let isCameraOff = false;
+  let currentQuestionIndex = 0;
+
+  const PRACTICE_QUESTIONS = [
+    {
+      q: 'How would you architect a high-throughput micro-frontend dashboard with client-side caching and optimistic UI updates?',
+      hint: 'Discuss component boundaries, module federation or iframe decoupling, WebSocket telemetry, and cache invalidation strategies.',
+    },
+    {
+      q: 'Explain how you diagnose and fix a subtle memory leak and frame-rate drop in a long-running single-page application.',
+      hint: 'Mention Chrome DevTools memory heaps, detached DOM nodes, event listener lifecycles, and performance profiler flamegraphs.',
+    },
+    {
+      q: 'How do you design an idempotent payment processing API endpoint with distributed retry safety?',
+      hint: 'Walk through idempotency keys, database transactions with row-level locks, deduplication caches, and webhook signatures.',
+    },
+    {
+      q: 'Describe your approach to database indexing and query optimization for a table with 50M+ records.',
+      hint: 'Cover composite indexes, EXPLAIN ANALYZE execution plans, covering indexes, and partition schemes.',
+    },
+  ];
 
   function renderVideoInterviewPage() {
     const user = getCurrentUser() || { name: 'Aarav Sharma' };
+    const curQ = PRACTICE_QUESTIONS[currentQuestionIndex] || PRACTICE_QUESTIONS[0];
+
     return `
       <div class="container" style="padding: 1.5rem 1.25rem;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
           <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="#/seeker/interviews" class="btn btn-outline btn-sm">${getIcon('arrowLeft')} Leave Room</a>
-            <h2 style="font-size: 1.35rem; margin-bottom: 0;">Interactive AI Video Practice Room</h2>
+            <a href="#/seeker/interviews" class="btn btn-outline btn-sm">${getIcon('arrowLeft')} Leave Studio</a>
+            <h2 style="font-size: 1.35rem; margin-bottom: 0;">Technical Interview Practice Studio</h2>
           </div>
           <div id="interview-timer" class="badge badge-muted" style="font-size: 0.9rem; font-family: monospace; font-weight: 700;">
-            ⏱️ 00:02:15
+            00:02:15
           </div>
         </div>
 
         <div class="video-room-container">
           <div class="video-feed-card">
             <div class="video-indicator-badge">
-              <span style="width: 8px; height: 8px; border-radius: 50%; background: #ffffff; display: inline-block;"></span> LIVE REC
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #ffffff; display: inline-block;"></span> PRACTICE SESSION
             </div>
-            <div class="video-canvas-container" style="background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);">
-              <div style="text-align: center; color: #ffffff;">
-                <div style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--primary); margin: 0 auto 1.5rem auto; overflow: hidden;">
+            <div class="video-canvas-container" id="video-stream-box" style="background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);">
+              <div id="cam-active-display" style="text-align: center; color: #ffffff; display: ${isCameraOff ? 'none' : 'block'};">
+                <div style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--primary); margin: 0 auto 1.25rem auto; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                   <img src="${user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}" style="width: 100%; height: 100%; object-fit: cover;" alt="${user.name}">
                 </div>
-                <h3>${user.name}</h3>
-                <div style="font-size: 0.85rem; color: #94a3b8;">Candidate Live Video Stream</div>
+                <h3 style="color: #ffffff; font-size: 1.15rem;">${user.name}</h3>
+                <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">Candidate Feed (Simulated Camera Active)</div>
+              </div>
+              <div id="cam-off-display" style="text-align: center; color: #94a3b8; display: ${isCameraOff ? 'block' : 'none'};">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: #1e293b; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; color: #64748b;">
+                  ${getIcon('videoOff')}
+                </div>
+                <div style="font-size: 0.9rem; font-weight: 600;">Camera Disabled</div>
               </div>
             </div>
             <div class="video-overlay-controls">
-              <button type="button" id="vid-mic-btn" class="btn btn-sm btn-secondary" style="border-radius: 9999px; color: #fff; background: rgba(255,255,255,0.2);">
-                ${getIcon('mic')} Mute
+              <button type="button" id="vid-mic-btn" class="btn btn-sm" style="border-radius: 9999px; color: #fff; background: ${isMicMuted ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255,255,255,0.2)'};">
+                ${isMicMuted ? getIcon('micOff') : getIcon('mic')} <span id="mic-btn-label">${isMicMuted ? 'Unmute' : 'Mute'}</span>
               </button>
-              <button type="button" id="vid-cam-btn" class="btn btn-sm btn-secondary" style="border-radius: 9999px; color: #fff; background: rgba(255,255,255,0.2);">
-                ${getIcon('video')} Video On
+              <button type="button" id="vid-cam-btn" class="btn btn-sm" style="border-radius: 9999px; color: #fff; background: ${isCameraOff ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255,255,255,0.2)'};">
+                ${isCameraOff ? getIcon('videoOff') : getIcon('video')} <span id="cam-btn-label">${isCameraOff ? 'Camera Off' : 'Camera On'}</span>
               </button>
               <button type="button" id="vid-end-btn" class="btn btn-sm btn-danger" style="border-radius: 9999px;">
-                End Call
+                End Session
               </button>
             </div>
           </div>
 
           <div class="card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <span class="badge badge-accent" style="margin-bottom: 0.75rem;">AI System Prompter</span>
-              <h3 style="font-size: 1.15rem; line-height: 1.5; margin-bottom: 1rem;">
-                "How would you architect a high-throughput micro-frontend dashboard with client-side caching and optimistic UI updates?"
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <span class="badge badge-primary">Technical Prompt ${currentQuestionIndex + 1} of ${PRACTICE_QUESTIONS.length}</span>
+                <button type="button" id="next-question-btn" class="btn btn-sm btn-outline">Next Prompt ${getIcon('arrowRight')}</button>
+              </div>
+              <h3 id="current-question-text" style="font-size: 1.15rem; line-height: 1.5; margin-bottom: 1rem;">
+                "${curQ.q}"
               </h3>
-              <div style="background: var(--bg-muted); padding: 0.85rem; border-radius: var(--radius-md); font-size: 0.825rem; color: var(--text-muted);">
-                💡 <strong>Hint:</strong> Cover React state management, WebSockets telemetry, and cache invalidation.
+              <div id="current-hint-box" style="background: var(--bg-muted); padding: 0.85rem; border-radius: var(--radius-md); font-size: 0.825rem; color: var(--text-muted); line-height: 1.5;">
+                <strong>Key Angles to Cover:</strong> ${curQ.hint}
               </div>
             </div>
 
-            <div>
-              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.4rem;">Audio Waveform Stream</div>
+            <div style="margin-top: 1.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">Audio Waveform Monitor</span>
+                <span id="mic-status-label" style="font-size: 0.75rem; color: ${isMicMuted ? 'var(--danger)' : 'var(--success)'}; font-weight: 600;">
+                  ${isMicMuted ? 'Muted' : 'Live input'}
+                </span>
+              </div>
               <canvas id="audio-wave-canvas" height="40" style="width: 100%; background: var(--bg-muted); border-radius: var(--radius-md);"></canvas>
               <button type="button" id="vid-eval-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
-                ${getIcon('sparkles')} Evaluate Candidate Response
+                ${getIcon('check')} Submit & Get Feedback
               </button>
             </div>
           </div>
@@ -2963,13 +3374,15 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
 
   function attachVideoInterviewEvents() {
     if (timerInt) clearInterval(timerInt);
+    if (videoAnimId) cancelAnimationFrame(videoAnimId);
+
     let sec = 135;
     const timerEl = document.querySelector('#interview-timer');
     timerInt = setInterval(() => {
       sec++;
       const m = String(Math.floor(sec / 60)).padStart(2, '0');
       const s = String(sec % 60).padStart(2, '0');
-      if (timerEl) timerEl.textContent = `⏱️ 00:${m}:${s}`;
+      if (timerEl) timerEl.textContent = `${m}:${s}`;
     }, 1000);
 
     const canvas = document.querySelector('#audio-wave-canvas');
@@ -2979,10 +3392,11 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
       const draw = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.lineWidth = 2;
-        ctx.strokeStyle = '#4f46e5';
+        ctx.strokeStyle = isMicMuted ? '#94a3b8' : '#4361ee';
         ctx.beginPath();
         for (let x = 0; x < canvas.width; x += 4) {
-          const y = (canvas.height / 2) + Math.sin((x + step) * 0.08) * 8 * Math.random();
+          const amp = isMicMuted ? 1 : 8 * Math.random();
+          const y = (canvas.height / 2) + Math.sin((x + step) * 0.08) * amp;
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -2993,10 +3407,55 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
       draw();
     }
 
-    document.querySelector('#vid-eval-btn')?.addEventListener('click', () => {
-      toast.success('AI Evaluation Ready! ⭐', 'Response analyzed with 94% technical depth.');
+    // Mic Toggle
+    document.querySelector('#vid-mic-btn')?.addEventListener('click', () => {
+      isMicMuted = !isMicMuted;
+      const btn = document.querySelector('#vid-mic-btn');
+      const label = document.querySelector('#mic-btn-label');
+      const statusLabel = document.querySelector('#mic-status-label');
+      if (btn) {
+        btn.style.background = isMicMuted ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255,255,255,0.2)';
+        btn.innerHTML = `${isMicMuted ? getIcon('micOff') : getIcon('mic')} <span id="mic-btn-label">${isMicMuted ? 'Unmute' : 'Mute'}</span>`;
+      }
+      if (statusLabel) {
+        statusLabel.textContent = isMicMuted ? 'Muted' : 'Live input';
+        statusLabel.style.color = isMicMuted ? 'var(--danger)' : 'var(--success)';
+      }
+      toast.info(isMicMuted ? 'Microphone Muted' : 'Microphone Unmuted', isMicMuted ? 'Audio stream paused.' : 'Audio stream active.');
     });
 
+    // Camera Toggle
+    document.querySelector('#vid-cam-btn')?.addEventListener('click', () => {
+      isCameraOff = !isCameraOff;
+      const btn = document.querySelector('#vid-cam-btn');
+      const activeDisplay = document.querySelector('#cam-active-display');
+      const offDisplay = document.querySelector('#cam-off-display');
+      if (btn) {
+        btn.style.background = isCameraOff ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255,255,255,0.2)';
+        btn.innerHTML = `${isCameraOff ? getIcon('videoOff') : getIcon('video')} <span id="cam-btn-label">${isCameraOff ? 'Camera Off' : 'Camera On'}</span>`;
+      }
+      if (activeDisplay) activeDisplay.style.display = isCameraOff ? 'none' : 'block';
+      if (offDisplay) offDisplay.style.display = isCameraOff ? 'block' : 'none';
+      toast.info(isCameraOff ? 'Camera Disabled' : 'Camera Enabled', isCameraOff ? 'Video stream paused.' : 'Video stream resumed.');
+    });
+
+    // Next Prompt Button
+    document.querySelector('#next-question-btn')?.addEventListener('click', () => {
+      currentQuestionIndex = (currentQuestionIndex + 1) % PRACTICE_QUESTIONS.length;
+      const nextQ = PRACTICE_QUESTIONS[currentQuestionIndex];
+      const qText = document.querySelector('#current-question-text');
+      const hintBox = document.querySelector('#current-hint-box');
+      if (qText) qText.textContent = `"${nextQ.q}"`;
+      if (hintBox) hintBox.innerHTML = `<strong>Key Angles to Cover:</strong> ${nextQ.hint}`;
+      toast.info('New Question Loaded', `Practice prompt ${currentQuestionIndex + 1} of ${PRACTICE_QUESTIONS.length}`);
+    });
+
+    // Evaluate
+    document.querySelector('#vid-eval-btn')?.addEventListener('click', () => {
+      toast.success('Response Evaluated', 'Strong structured delivery with solid architectural depth.');
+    });
+
+    // End call
     document.querySelector('#vid-end-btn')?.addEventListener('click', () => {
       if (timerInt) clearInterval(timerInt);
       if (videoAnimId) cancelAnimationFrame(videoAnimId);
@@ -3061,12 +3520,12 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
             </div>
             <ul class="chat-threads-list">
               <li class="chat-thread-item active">
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem;">
                   💼
                 </div>
-                <div>
+                <div style="overflow: hidden;">
                   <div style="font-weight: 700; font-size: 0.9rem;">Priya Patel (TechCorp)</div>
-                  <div style="font-size: 0.8rem; color: var(--text-muted);">${chat?.lastMessage || ''}</div>
+                  <div id="thread-last-msg" style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(chat?.lastMessage || '')}</div>
                 </div>
               </li>
             </ul>
@@ -3074,19 +3533,22 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
 
           <div class="chat-main">
             <div class="chat-header">
-              <div style="font-weight: 700;">Priya Patel (Recruiter at TechCorp Innovations)</div>
-              <a href="#/seeker/interviews/video" class="btn btn-primary btn-sm">${getIcon('video')} Video Call</a>
+              <div>
+                <div style="font-weight: 700;">Priya Patel</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Lead Technical Recruiter • TechCorp Innovations</div>
+              </div>
+              <a href="#/seeker/interviews/video" class="btn btn-primary btn-sm">${getIcon('video')} Join Video Room</a>
             </div>
             <div class="chat-messages-container" id="chat-stream">
               ${(chat?.messages || []).map(m => `
                 <div class="chat-bubble ${m.senderId === user.id ? 'sent' : 'received'}">
-                  <div>${m.text}</div>
+                  <div>${escapeHtml(m.text)}</div>
                   <div class="chat-timestamp">${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               `).join('')}
             </div>
             <form id="chat-form" class="chat-input-bar">
-              <input type="text" id="chat-input" class="form-input" placeholder="Type a message..." required autocomplete="off" style="flex: 1;">
+              <input type="text" id="chat-input" class="form-input" placeholder="Type a message to Priya..." required autocomplete="off" style="flex: 1;">
               <button type="submit" class="btn btn-primary">${getIcon('send')} Send</button>
             </form>
           </div>
@@ -3108,21 +3570,37 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
       sendMessage('chat_1', text, user?.id);
       input.value = '';
 
+      const lastMsgEl = document.querySelector('#thread-last-msg');
+      if (lastMsgEl) lastMsgEl.textContent = text;
+
       if (stream) {
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble sent';
-        bubble.innerHTML = `<div>${text}</div><div class="chat-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
+        bubble.innerHTML = `<div>${escapeHtml(text)}</div><div class="chat-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
         stream.appendChild(bubble);
         stream.scrollTop = stream.scrollHeight;
       }
 
       setTimeout(() => {
-        const reply = "Thank you! Our engineering team will discuss this during the live session.";
+        const lower = text.toLowerCase();
+        let reply = "Thank you for the update! Our engineering team will review this and discuss during the interview session.";
+        if (lower.includes('interview') || lower.includes('time') || lower.includes('schedule') || lower.includes('when')) {
+          reply = "Your Round 1: System Design interview is scheduled for Oct 8 at 3:00 PM IST. You can join directly using the 'Join Video Room' button above!";
+        } else if (lower.includes('salary') || lower.includes('compensation') || lower.includes('ctc') || lower.includes('budget')) {
+          reply = "The compensation for this Senior Frontend position is benchmarked at ₹28 - ₹38 Lakhs per annum plus equity incentives.";
+        } else if (lower.includes('resume') || lower.includes('cv') || lower.includes('project') || lower.includes('portfolio')) {
+          reply = "Your resume and React architecture projects looked very strong. The engineering hiring manager was particularly impressed with your performance optimization work.";
+        } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+          reply = "Hi Aarav! Great to connect. Are you ready for tomorrow's technical session?";
+        }
+
         sendMessage('chat_1', reply, 'user_employer_1');
+        if (lastMsgEl) lastMsgEl.textContent = reply;
+
         if (stream) {
           const rb = document.createElement('div');
           rb.className = 'chat-bubble received';
-          rb.innerHTML = `<div>${reply}</div><div class="chat-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
+          rb.innerHTML = `<div>${escapeHtml(reply)}</div><div class="chat-timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`;
           stream.appendChild(rb);
           stream.scrollTop = stream.scrollHeight;
         }
@@ -3169,13 +3647,13 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
   function attachNotificationsEvents() {
     document.querySelector('#mark-read-btn')?.addEventListener('click', () => {
       markAllNotificationsRead();
-      toast.success('Done', 'All notifications marked as read.');
-      window.location.reload();
+      toast.success('All Notifications Read', 'All alerts marked as read.');
+      handleRoute();
     });
     document.querySelector('#clear-notif-btn')?.addEventListener('click', () => {
       clearAllNotifications();
-      toast.info('Cleared', 'Notifications cleared.');
-      window.location.reload();
+      toast.info('Notifications Cleared', 'All alerts have been cleared.');
+      handleRoute();
     });
   }
 
@@ -3426,8 +3904,8 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
       btn.addEventListener('click', () => {
         const u = toggleUserStatus(btn.dataset.id);
         if (u) {
-          toast.info('Status Updated', `User is now ${u.status}.`);
-          window.location.reload();
+          toast.info('Status Updated', `User account is now ${u.status}.`);
+          handleRoute();
         }
       });
     });
@@ -3448,16 +3926,16 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
         toast.error('Company not added', 'Please check the company details and try again.');
         return;
       }
-      toast.success('Company Added', `${name} is now visible in the company directory.`);
-      window.location.reload();
+      toast.success('Company Added', `${name} is now listed in the company directory.`);
+      handleRoute();
     });
 
     document.querySelectorAll('.admin-company-status-btn').forEach(button => {
       button.addEventListener('click', () => {
         const updated = updateCompany(button.dataset.id, { status: button.dataset.status });
         if (updated) {
-          toast.success('Company Updated', `${updated.name} is now ${updated.status}.`);
-          window.location.reload();
+          toast.success('Company Updated', `${updated.name} status is now ${updated.status}.`);
+          handleRoute();
         }
       });
     });
@@ -3467,8 +3945,8 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
         const selector = document.querySelector(`.admin-company-category[data-id="${button.dataset.id}"]`);
         const updated = updateCompany(button.dataset.id, { category: selector.value });
         if (updated) {
-          toast.success('Company Type Updated', `${updated.name} is categorized as ${updated.category}.`);
-          window.location.reload();
+          toast.success('Category Updated', `${updated.name} categorized as ${updated.category}.`);
+          handleRoute();
         }
       });
     });
@@ -3504,8 +3982,8 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
         requirements: [],
         status: 'active',
       });
-      toast.success('Job Published', 'The active job is now visible to job seekers.');
-      window.location.reload();
+      toast.success('Job Published', 'The new job is now active and visible to candidates.');
+      handleRoute();
     });
 
     document.querySelectorAll('.admin-job-update-btn').forEach(button => {
@@ -3520,8 +3998,8 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
         }
         const updated = updateJob(id, { title, location, status });
         if (updated) {
-          toast.success('Hiring Updated', `${updated.title} is now ${updated.status}.`);
-          window.location.reload();
+          toast.success('Job Listing Updated', `${updated.title} is now ${updated.status}.`);
+          handleRoute();
         }
       });
     });
@@ -3546,17 +4024,14 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     let fullHash = window.location.hash;
     const user = getCurrentUser();
 
-    // If user is not logged in and visits root or empty hash, redirect to login page first
-    if (!fullHash || fullHash === '#' || fullHash === '#/') {
+    // If opened without any hash and not authenticated, route to sign in
+    if (!fullHash) {
       if (!user) {
         window.location.hash = '#/login';
         return;
       } else {
         if (user.role === USER_ROLES.JOB_SEEKER) {
           window.location.hash = '#/seeker/dashboard';
-          return;
-        } else if (user.role === USER_ROLES.EMPLOYER) {
-          window.location.hash = '#/jobs';
           return;
         } else if (user.role === USER_ROLES.ADMIN) {
           window.location.hash = '#/admin/dashboard';
@@ -3568,6 +4043,12 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     const [hashPath, queryString] = fullHash.split('?');
     const params = Object.fromEntries(new URLSearchParams(queryString || '').entries());
 
+    // Clean up practice studio timers/animations if not in video room
+    if (!hashPath.startsWith('#/seeker/interviews/video')) {
+      if (timerInt) { clearInterval(timerInt); timerInt = null; }
+      if (videoAnimId) { cancelAnimationFrame(videoAnimId); videoAnimId = null; }
+    }
+
     if (hashPath.startsWith('#/employer')) {
       window.location.hash = '#/jobs';
       return;
@@ -3576,7 +4057,6 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     // If user is already logged in and visits login or signup, redirect to their dashboard
     if ((hashPath === '#/login' || hashPath === '#/signup') && user) {
       if (user.role === USER_ROLES.JOB_SEEKER) window.location.hash = '#/seeker/dashboard';
-      else if (user.role === USER_ROLES.EMPLOYER) window.location.hash = '#/jobs';
       else if (user.role === USER_ROLES.ADMIN) window.location.hash = '#/admin/dashboard';
       return;
     }
@@ -3602,11 +4082,12 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
 
     let html = '';
     let attachFn = null;
-    let title = 'JobConnect - Next-Gen Career & Hiring Ecosystem';
+    let title = 'JobConnect — Curated Tech Careers & Direct Hiring';
 
-    if (hashPath === '#/' || hashPath === '#') {
+    if (hashPath === '#/' || hashPath === '#' || !hashPath) {
       html = renderLandingPage();
       attachFn = attachLandingEvents;
+      title = 'JobConnect — Find Verified Tech Roles';
     } else if (hashPath === '#/login') {
       html = renderLoginPage();
       attachFn = attachLoginEvents;
@@ -3671,7 +4152,8 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     }
 
     if (pageContainer) pageContainer.innerHTML = html;
-    window.scrollTo(0, 0);
+    if (title) document.title = title;
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (typeof attachFn === 'function') attachFn();
   }
 
