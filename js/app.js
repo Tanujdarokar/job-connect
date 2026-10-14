@@ -2929,9 +2929,9 @@
 
           <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             ${filtered.length > 0 ? filtered.map(app => {
-              const step = getStepNumber(app.status);
-              const fill = ((step - 1) / 4) * 100;
-              return `
+      const step = getStepNumber(app.status);
+      const fill = ((step - 1) / 4) * 100;
+      return `
                 <div class="card" style="padding: 1.75rem;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
                     <div style="display: flex; gap: 1rem;">
@@ -2971,7 +2971,7 @@
                   </div>
                 </div>
               `;
-            }).join('') : `
+    }).join('') : `
               <div class="card" style="text-align: center; padding: 4rem 2rem;">
                 <h3>No Applications Found</h3>
                 <a href="#/jobs" class="btn btn-primary" style="margin-top: 1rem;">Find Jobs Now</a>
@@ -2983,7 +2983,7 @@
     `;
   }
 
-  function attachApplicationsEvents() {}
+  function attachApplicationsEvents() { }
 
   // --- Companies & Details ---
   function renderCompaniesPage(params = {}) {
@@ -3503,7 +3503,7 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     `;
   }
 
-  function attachInterviewsEvents() {}
+  function attachInterviewsEvents() { }
 
   // --- Chat Page ---
   function renderChatPage() {
@@ -3695,7 +3695,7 @@ Experience: Led frontend team at InnovateX Labs building Next.js enterprise SaaS
     `;
   }
 
-  function attachSalariesEvents() {}
+  function attachSalariesEvents() { }
 
   // --- Admin Console ---
   function renderAdminDashboardPage() {
