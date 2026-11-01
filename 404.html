@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Page not found — CareerConnect Job & Internship Finder Platform.">
+  <meta name="theme-color" content="#2563eb">
+  <title>404 - Page Not Found | CareerConnect</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+
+  <!-- Open Graph / Meta -->
+  <meta property="og:title" content="Page Not Found | CareerConnect">
+  <meta property="og:description" content="The requested page could not be found on CareerConnect. Search active job and internship listings instead.">
+  <meta property="og:image" content="assets/images/og-preview.svg">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Scripts -->
+  <script defer src="js/data.js"></script>
+  <script defer src="js/analytics.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/jobs.js"></script>
+  <script defer src="js/internships.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/dashboard.js"></script>
+</head>
+<body data-page="404">
+  <div id="navbar-container"></div>
+
+  <main id="page-content">
+    <section class="wrap page-intro" style="text-align:center;padding:90px 20px 70px">
+      <div class="empty-icon" style="width:80px;height:80px;font-size:2.4rem;color:var(--primary)">
+        <i class="fa-solid fa-compass"></i>
+      </div>
+      <span class="eyebrow" style="margin-top:16px">Error 404</span>
+      <h1 style="font-size:2.8rem;margin:10px 0">Page Not Found</h1>
+      <p style="max-width:540px;margin:0 auto 28px;font-size:1.05rem">
+        The link you followed may be broken or the page may have been moved. Search our active opportunities below or return home.
+      </p>
+
+      <form class="search-box" style="margin:0 auto 32px;max-width:620px" data-home-search>
+        <div class="search-field">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input name="query" type="search" placeholder="Search job title, skill, or company" aria-label="Search job title, skill or company">
+        </div>
+        <button class="button button-primary" type="submit">Search →</button>
+      </form>
+
+      <div style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap">
+        <a class="button button-primary" href="index.html"><i class="fa-solid fa-house"></i> Go to Home Page</a>
+        <a class="button button-secondary" href="jobs.html"><i class="fa-solid fa-briefcase"></i> Browse Jobs</a>
+        <a class="button button-secondary" href="internships.html"><i class="fa-solid fa-graduation-cap"></i> Browse Internships</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+  <div class="toast-region" aria-live="polite"></div>
+</body>
+</html>

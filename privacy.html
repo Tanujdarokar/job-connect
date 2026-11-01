@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CareerConnect Privacy Policy — Learn how candidate data, LocalStorage data, and privacy permissions are handled safely.">
+  <meta name="theme-color" content="#2563eb">
+  <title>Privacy Policy | CareerConnect</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+
+  <!-- Open Graph / Meta -->
+  <meta property="og:title" content="Privacy Policy | CareerConnect">
+  <meta property="og:description" content="CareerConnect Privacy Policy detailing client-side browser storage, zero remote server tracking, and data security.">
+  <meta property="og:image" content="assets/images/og-preview.svg">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Scripts -->
+  <script defer src="js/data.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/jobs.js"></script>
+  <script defer src="js/internships.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/dashboard.js"></script>
+</head>
+<body data-page="privacy">
+  <div id="navbar-container"></div>
+
+  <main id="page-content">
+    <section class="wrap page-intro">
+      <span class="eyebrow"><i class="fa-solid fa-shield-halved"></i> Transparency & Data Rights</span>
+      <h1>Privacy Policy</h1>
+      <p>Last updated: February 28, 2025. Learn how CareerConnect respects candidate privacy and handles local data.</p>
+    </section>
+
+    <section class="wrap" style="padding-bottom:80px">
+      <article style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:36px;box-shadow:var(--shadow-sm)">
+
+        <div class="detail-section">
+          <h2>1. Overview & Architecture</h2>
+          <p>CareerConnect is built on a <strong>privacy-first, client-side web architecture</strong>. All user accounts, saved jobs, bookmarked internships, and application tracking records are stored exclusively in your Web Browser's <code>LocalStorage</code> and <code>SessionStorage</code>.</p>
+          <p style="margin-top:10px">We do not operate remote databases that aggregate or sell your personal career data to third-party ad networks or brokers.</p>
+        </div>
+
+        <div class="detail-section">
+          <h2>2. Information Stored Locally</h2>
+          <ul>
+            <li><strong>Account Profile Data:</strong> Full Name, Email Address, Professional Headline, and Location. Passwords are encrypted using SHA-256 Web Crypto hashing prior to local storage.</li>
+            <li><strong>Application History:</strong> Job/internship IDs, application date, and status indicators (Applied, Under Review, Shortlisted, Rejected).</li>
+            <li><strong>Bookmarks & Preferences:</strong> Saved opportunity IDs and color theme choice (Light vs Dark mode).</li>
+          </ul>
+        </div>
+
+        <div class="detail-section">
+          <h2>3. Cookies & Local Storage Consent</h2>
+          <p>CareerConnect uses essential client-side <code>LocalStorage</code> entries required to provide functional features (such as user authentication, saving jobs, and preserving user theme preferences). You can clear or reset all local data at any time via your browser settings or using the <strong>"Clear All My Local Data"</strong> button in your Dashboard.</p>
+        </div>
+
+        <div class="detail-section">
+          <h2>4. Data Security</h2>
+          <p>We enforce strict security practices on the frontend, including HTML input escaping to prevent Cross-Site Scripting (XSS), Web Crypto hashing for passwords, and strict Content Security Policy (CSP) headers restricting script execution to self and trusted CDNs.</p>
+        </div>
+
+        <div class="detail-section">
+          <h2>5. Your Rights & Data Erasure</h2>
+          <p>Because your information resides on your device, you maintain 100% control over your data. You may export, update, or permanently delete your account records instantly from your personal Dashboard.</p>
+        </div>
+
+        <div style="margin-top:28px">
+          <a class="button button-primary" href="index.html">← Return to Home Page</a>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div id="footer-container"></div>
+  <div class="toast-region" aria-live="polite"></div>
+</body>
+</html>

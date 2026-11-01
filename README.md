@@ -1,141 +1,117 @@
-# 💼 JobConnect — Modern Tech Career & Hiring Platform
+# CareerConnect — Modern Job & Internship Finder Platform
 
-[![Pure Vanilla HTML5](https://img.shields.io/badge/HTML5-Pure%20Vanilla-E34F26?logo=html5&logoColor=white)](index.html)
-[![Pure Vanilla CSS3](https://img.shields.io/badge/CSS3-Modern%20Design%20System-1572B6?logo=css3&logoColor=white)](css/style.css)
-[![Pure Vanilla JS](https://img.shields.io/badge/JavaScript-ES6%2B%20Zero%20Dependencies-F7DF1E?logo=javascript&logoColor=black)](js/app.js)
-[![Zero Build Steps](https://img.shields.io/badge/Build%20Step-Zero%20Config-4caf50)](index.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+> **"Discover Opportunities. Build Your Future."**
 
-**JobConnect** is a job-seeker-focused career portal engineered entirely in **100% Pure Vanilla HTML5, CSS3, and Modern JavaScript (ES6+)**.
-
-Job seekers can discover and apply for jobs, while platform administrators manage the company directory and active job listings. The project has **zero external framework dependencies**, **zero npm packages**, and **zero build steps**.
+**CareerConnect** is a modern, responsive, multi-page web platform designed for students, freshers, and experienced candidates to discover jobs, internships, and remote roles across top Indian tech hubs. Built strictly with **HTML5, CSS3, and Vanilla JavaScript**, it features advanced search filtering, bookmarking, interactive application tracking, dark/light mode switching, SHA-256 password encryption, and production-grade web security headers.
 
 ---
 
-## ⚡ Quick Start (No Installation Needed)
+## 🚀 Quick Start — How to Run the Project
 
-You do **not** need Node.js, npm, webpack, or any compilation toolchain. The entire web application runs directly inside any modern web browser.
+### Option 1: VS Code & Live Server (Recommended)
+1. Open Visual Studio Code and select **File > Open Folder...** to open the project root directory.
+2. Install the **Live Server** extension by *Ritwick Dey* from the VS Code Extensions Marketplace (`Ctrl+Shift+X`).
+3. Right-click [`index.html`](index.html) in the File Explorer and select **Open with Live Server** (or click **Go Live** in the bottom status bar).
+4. The site will automatically launch at `http://127.0.0.1:5500/index.html`. No build step or `npm install` is required.
 
-### Option 1: Direct File Launch
-Double-click [`index.html`](index.html) or right-click `index.html` → **Open With** → **Google Chrome**, **Microsoft Edge**, **Brave**, **Firefox**, or **Safari**.
-
-### Option 2: VS Code Live Server
-1. Open the project folder in **VS Code**.
-2. Right-click [`index.html`](index.html) and choose **"Open with Live Server"**.
-
-### Option 3: Lightweight Local Server (Optional)
-```bash
-# Using Python
-python -m http.server 3000
-
-# Using Node.js npx serve
-npx serve .
-```
-Open your browser at `http://localhost:3000` (or the URL printed by your server).
+### Option 2: Direct Browser Launch
+Double-click `index.html` in your operating system's file manager to open it directly in Google Chrome, Microsoft Edge, Firefox, or Safari.
 
 ---
 
-## 🔐 Authentication & First-Visit Experience
+## 🔑 Demo Account Credentials
 
-When users first visit the platform without being logged in, they are immediately directed to the **Sign In** screen (`#/login`). Users can sign in using existing registered accounts or create a new account for free via **Get Started** (`#/signup`).
+- **Email**: `student@careerconnect.demo`
+- **Password**: `demo123`
 
-### Pre-configured Accounts:
-| Role | Email | Password | Access & Features |
-|:---|:---|:---|:---|
-| 👤 **Job Seeker** | `seeker@jobconnect.demo` | `password123` | Profile CRUD, Applications, AI ATS Resume Analyzer, Live Video Interview Room, Chat |
-| 🛡️ **Platform Admin** | `admin@jobconnect.demo` | `password123` | User moderation, company management, and active hiring controls |
+> **Note**: You can also register a new account on the [Registration Page](register.html). Passwords are encrypted locally using **SHA-256 Web Crypto hashing** before storing in browser `LocalStorage`. All applications, bookmarks, and user session records remain 100% local and private to your browser.
 
 ---
 
-## 🚀 Key Features
+## 💻 Pages & Core Features
 
-### 👤 1. Job Seeker Experience
-- **Smart Job Search & Filtering:** Search by keyword, role, and location. Live multi-filter panel for Workplace Type (*Remote, Hybrid, On-site*), Employment Type (*Full-time, Part-time, Contract, Internship*), Experience Level (*Entry, Mid, Senior, Lead*), Salary range slider, and Sort order (*Latest, Highest Salary*).
-- **Comprehensive Job View & 1-Click Apply:** Detailed job briefs with salary, experience, key responsibilities, requirements, tech stacks, perks, and company profiles. One-click application modal with resume attachment and cover letter.
-- **Interactive Candidate Profile:** 
-  - Dynamic profile completion percentage meter.
-  - Personal details & contact editor.
-  - Work experience timeline with full CRUD actions.
-  - Education history with full CRUD actions.
-  - Interactive skill tagging system.
-  - Simulated PDF/DOCX resume file uploader.
-- **AI Resume ATS Analyzer:** 
-  - Instant ATS score calculation against selected tech positions.
-  - Strengths & matched skill badges.
-  - Critical skill gaps identification.
-  - Actionable AI-powered enhancement suggestions.
-- **Simulated Live Video Interview Room:** 
-  - Interactive webcam and microphone toggle controls.
-  - Real-time HTML5 Canvas audio waveform visualizer.
-  - Dynamic AI interview questions prompter with time tracker.
-  - Answer submission and automated readiness score generator.
-- **Recruiter Chat Messenger:** Dedicated direct messaging system with simulated instant recruiter answers.
-- **Application Pipeline Tracker:** Track submissions across stages (*Applied → In Review → Shortlisted → Interviewing → Offered / Rejected*).
-- **Salary Insights Explorer:** Interactive percentile salary benchmarks across leading technology roles and top paying companies in India.
-- **Company Directory:** Browse active companies by type (*MNC*, *Top Startup*, or *FAANG*) and see their currently active vacancies.
+| Page | File | Key Capabilities |
+| :--- | :--- | :--- |
+| **Home Page** | [`index.html`](index.html) | Hero section, keyword & location search bar, popular category chips, featured jobs grid, latest internships grid, top hiring companies strip, testimonials, and brand footer. |
+| **Find Jobs** | [`jobs.html`](jobs.html) | Real-time multi-filter (Location, Salary LPA, Experience level, Work mode, Category, Employment type), sorting (*Recent*, *Salary High to Low*, *Title A–Z*), load-more pagination, and empty state reset. |
+| **Find Internships** | [`internships.html`](internships.html) | Domain filtering, duration selector, stipend threshold (*₹10,000+* to *₹20,000+*), paid-only toggle, urgent closing badges (*≤ 5 days left*), and sorting (*Closing Soon*, *Stipend High to Low*). |
+| **Job Details** | [`job-details.html`](job-details.html) | Full role description, key responsibilities list, qualifications, skill tags, employer profile, interactive Apply Modal, save bookmark toggle, and recently viewed tracking. |
+| **User Dashboard** | [`dashboard.html`](dashboard.html) | Candidate avatar, interactive profile completion progress bar (25% Name + 25% Email + 25% Headline + 25% Location), stats overview, application status dropdown tracker (*Applied*, *Under Review*, *Shortlisted*, *Rejected*), saved jobs, saved internships, recently viewed items, and "Clear All My Local Data" privacy button. |
+| **Sign In** | [`login.html`](login.html) | SHA-256 encrypted authentication, email format check, password min length, password show/hide toggle, and remember me session toggle. |
+| **Create Account** | [`register.html`](register.html) | Candidate signup validation, full name check, confirm password matching, duplicate email prevention, and LocalStorage user registration. |
+| **Privacy Policy** | [`privacy.html`](privacy.html) | Transparency statement covering local data storage, zero remote server tracking, cookie policies, and candidate data erasure rights. |
+| **Terms & Conditions** | [`terms.html`](terms.html) | Legal agreement detailing terms of service, fictional sample dataset disclaimers, acceptable use policies, and liability limits. |
+| **Custom 404** | [`404.html`](404.html) | Error 404 handler featuring brand headers, a live opportunity search bar, and primary navigation buttons. |
 
 ---
 
-### 🛡️ 2. Platform Administration
-- **User Management & Moderation:** Inspect registered users and ban or unban accounts.
-- **Company Directory Management:** Add and activate companies, categorize them as *MNC*, *Top Startup*, *FAANG*, or *Other*, and deactivate listings when needed.
-- **Active Hiring Management:** Publish jobs for active companies, edit job titles and locations, and pause or reactivate listings. Active changes appear in seeker job search, recommendations, and company pages.
+## 🛡️ Production Security, Privacy & Performance Highlights
+
+1. **SHA-256 Password Encryption**: Client-side `crypto.subtle.digest('SHA-256')` hashing prevents plaintext passwords from ever being stored in browser storage.
+2. **XSS & Input Sanitization**: All user inputs (`name`, `email`, `headline`, `location`, `coverNote`, `query`) are sanitized via `Career.escapeHtml()` prior to rendering.
+3. **Bot & Spam Honeypot Field**: Forms include invisible honeypot inputs (`website_hp`) that catch and drop automated bot submissions.
+4. **Resume Upload Security**: Apply Modal enforces extension validation (`.pdf`, `.doc`, `.docx`) and file size limits (≤ 5MB).
+5. **GDPR / CCPA Cookie Consent Banner**: Interactive consent banner popping up on initial visit with preference persistence (`careerconnect:cookie_consent`).
+6. **HTTP Security Headers**: Deployed production `.htaccess` (Apache) and `_headers` (Netlify/Vercel) specifying `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy`.
+7. **WCAG AAA Color Contrast**: Standardized CSS variable tokens across Light and Dark themes to ensure a contrast ratio ≥ 7:1 for all text elements.
+8. **Touch Target Accessibility**: All buttons, form inputs, links, and icons meet the minimum 44x44px touch target recommendation.
+9. **SEO & Social Sharing Assets**: Includes vector SVG Favicon ([`assets/images/favicon.svg`](assets/images/favicon.svg)), Social Sharing Open Graph preview card ([`assets/images/og-preview.svg`](assets/images/og-preview.svg)), [`sitemap.xml`](sitemap.xml), and [`robots.txt`](robots.txt).
+10. **Zero Dependency Footprint**: Pure native vanilla architecture with zero npm dependencies, using only pre-connected trusted CDNs for Font Awesome 6 icons and Google Fonts.
 
 ---
 
-### 🌐 3. Customization, Accessibility & Persistence
-- **Multi-Language (i18n):** Native instant switching between **English (🇬🇧)**, **Hindi (🇮🇳 हिन्दी)**, and **Gujarati (🇮🇳 ગુજરાતી)**.
-- **Theme Engine:** Dark mode and Light mode with smooth CSS transitions and persistent user preference.
-- **Local Storage Data Persistence:** User sessions, admin-managed companies and jobs, applications, saved bookmarks, interview records, reviews, and notifications persist in browser `localStorage`. Demo data is local to one browser and does not synchronize between separate users or devices.
+## 📁 Project Directory Structure
 
----
-
-## 📂 Project Structure
-
-```
-job-portal/
-├── index.html              # HTML5 entry point & accessible SPA shell
+```text
+CareerConnect/
+│
+├── index.html           # Home Page
+├── jobs.html            # Find Jobs Page
+├── internships.html     # Find Internships Page
+├── job-details.html     # Opportunity Details Page
+├── dashboard.html       # Candidate Command Center
+├── login.html           # Sign In Interface
+├── register.html        # Create Account Interface
+├── privacy.html         # Privacy Policy
+├── terms.html           # Terms & Conditions
+├── 404.html             # Custom 404 Error Page
+│
+├── sitemap.xml          # Search Engine Sitemap
+├── robots.txt           # Search Crawler Directives
+├── .htaccess            # Apache Server Config & Security Headers
+├── _headers             # Netlify/Vercel Security Headers
+│
 ├── css/
-│   └── style.css           # Modern design system (Tokens, Dark/Light Themes, Fluid Transitions)
+│   ├── style.css        # Main Design System, WCAG AAA Tokens & Consent Banner
+│   ├── dashboard.css    # Candidate Profile & Application Status Badges
+│   └── responsive.css   # Mobile Drawer & Responsive Breakpoints
+│
 ├── js/
-│   └── app.js              # Standalone vanilla JS engine (Router, Reactive Store, Modals, Views)
-└── README.md               # Documentation & setup guide
+│   ├── data.js         # 20 Jobs, 20 Internships & 10 Employers
+│   ├── analytics.js    # Privacy-Preserving Client Analytics
+│   ├── main.js         # Core Engine, Cookie Banner, Honeypot & Security Logs
+│   ├── jobs.js         # Job Search & Filter Controller
+│   ├── internships.js  # Internship Search & Domain Controller
+│   ├── auth.js         # SHA-256 Encrypted Auth & Validation
+│   └── dashboard.js    # Profile Management & Application Tracking
+│
+└── assets/
+    └── images/
+        ├── favicon.svg     # Vector Brand Favicon
+        └── og-preview.svg  # Vector Social Preview Sharing Card
 ```
 
 ---
 
-## 🧭 Navigation & SPA Hash Routes
+## 📊 Sample Dataset Summary (`js/data.js`)
 
-| Route | Page / Feature Description |
-|:---|:---|
-| `#/` | JobConnect Landing Page with Hero search, stats, category grid, and featured positions |
-| `#/jobs` | Job Discovery with live search, multi-faceted filtering, and sorting |
-| `#/jobs/:id` | Detailed Job Specification page with 1-click modal apply |
-| `#/companies` | Company directory with MNC, Top Startup, FAANG, and active hiring filters |
-| `#/companies/:id` | Individual company profile, reviews, and active listings |
-| `#/salaries` | Salary benchmark explorer and top paying companies |
-| `#/ai-tools/resume` | AI Resume ATS Analyzer with score gauge and gap insights |
-| `#/seeker/interviews/video` | Live Video Interview simulator with canvas audio visualizer |
-| `#/seeker/profile` | Candidate profile, skill manager, work & education CRUD, resume upload |
-| `#/seeker/applications` | Application status & pipeline tracker |
-| `#/seeker/saved-jobs` | Bookmarked positions list |
-| `#/seeker/chat` | Job-seeker direct chat messenger |
-| `#/seeker/notifications` | Notifications center with action links |
-| `#/admin/dashboard` | User moderation, company directory management, and active hiring controls |
-| `#/login` | Sign in as a job seeker or platform administrator |
-| `#/signup` | Create a job seeker account |
+All opportunities are realistic tech roles headquartered across Indian tech hubs (**Bengaluru, Hyderabad, Pune, Mumbai, Delhi NCR / Noida / Gurugram, and Remote (India)**):
+- **20 Sample Job Listings**: Senior Frontend Developer, Flutter Mobile Developer, Backend Software Engineer, AI/ML Engineer, Full Stack Engineer, UI/UX Designer, Data Analyst, Java Backend Developer, Python Developer, Cloud DevOps Engineer, etc.
+- **20 Sample Internship Listings**: Frontend Web Intern, Flutter App Intern, Machine Learning Intern, Data Science Intern, UI/UX Design Intern, Full Stack Intern, Java Intern, Python Intern, etc.
+- **10 Featured Employers**: Razorpay, Infosys, Swiggy, Microsoft India, Freshworks, PhonePe, TCS, Zomato, Persistent Systems, Adobe India.
 
 ---
 
-## 🛠️ Technology Stack & Architecture
+## 📜 License & Disclaimers
 
-- **Semantic HTML5:** Native accessible elements, semantic layout containers (`#navbar-container`, `#page-content`, `#footer-container`, `.toast-container`).
-- **Modern CSS3:** CSS Custom Properties (Design Tokens), Glassmorphism, CSS Grid, Flexbox, custom scrollbars, keyframe animations, and Dark/Light theme toggling.
-- **Vanilla ES6+ JavaScript:** Client-side hash routing, reactive state store with event listeners, dynamic DOM rendering, HTML5 Canvas audio waveform visualization, and `localStorage` persistence.
-- **Zero Frameworks & Zero Dependencies:** No React, Vue, Angular, jQuery, Tailwind, Bootstrap, Vite, or Webpack required.
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License**. Free to use, modify, and distribute for educational and commercial purposes.
+This project is created for portfolio showcase purposes. All company names, job descriptions, and salary figures are fictional sample data.

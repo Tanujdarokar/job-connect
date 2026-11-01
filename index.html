@@ -1,26 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JobConnect — Curated Tech Careers & Hiring</title>
-    <meta name="description" content="Discover verified software engineering roles, match your resume with AI ATS analysis, practice video interviews, and track job applications." />
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CareerConnect — Discover jobs and internships from top tech companies across India. Save opportunities and track your career applications safely.">
+  <meta name="theme-color" content="#2563eb">
+  <title>CareerConnect | Discover Opportunities. Build Your Future.</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
 
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
-  <body>
-    <div id="app">
-      <div id="navbar-container"></div>
-      <main id="page-content"></main>
-      <div id="footer-container"></div>
-    </div>
+  <!-- Open Graph / Social Sharing Meta -->
+  <meta property="og:title" content="CareerConnect | Discover Opportunities. Build Your Future.">
+  <meta property="og:description" content="Discover jobs and internships from top companies in India. Save opportunities and track your career journey safely with CareerConnect.">
+  <meta property="og:image" content="assets/images/og-preview.svg">
+  <meta property="og:type" content="website">
 
-    <div class="toast-container" aria-live="polite"></div>
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CareerConnect | Job & Internship Finder Platform">
+  <meta name="twitter:description" content="Discover engineering roles, high-stipend internships, and remote opportunities across India.">
+  <meta name="twitter:image" content="assets/images/og-preview.svg">
 
-    <script src="js/app.js"></script>
-  </body>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Deferred Scripts -->
+  <script defer src="js/data.js"></script>
+  <script defer src="js/analytics.js"></script>
+  <script defer src="js/main.js"></script>
+  <script defer src="js/jobs.js"></script>
+  <script defer src="js/internships.js"></script>
+  <script defer src="js/auth.js"></script>
+  <script defer src="js/dashboard.js"></script>
+</head>
+<body data-page="home">
+  <div id="navbar-container"></div>
+  <main id="page-content"></main>
+  <div id="footer-container"></div>
+  <div class="toast-region" aria-live="polite"></div>
+</body>
 </html>

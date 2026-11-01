@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0b0f19" />
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+
+  <circle cx="1050" cy="100" r="300" fill="#2563eb" opacity="0.08" />
+  <circle cx="150" cy="550" r="250" fill="#0284c7" opacity="0.06" />
+
+  <g transform="translate(100, 140)">
+    <rect width="90" height="90" rx="24" fill="url(#brandGrad)" />
+    <text x="45" y="62" font-family="sans-serif" font-weight="800" font-size="58" fill="#ffffff" text-anchor="middle">C</text>
+
+    <text x="120" y="60" font-family="sans-serif" font-weight="800" font-size="46" fill="#ffffff">Career<tspan fill="#2563eb">Connect</tspan></text>
+
+    <text x="0" y="180" font-family="sans-serif" font-weight="800" font-size="64" fill="#f8fafc">Discover Opportunities.</text>
+    <text x="0" y="250" font-family="sans-serif" font-weight="800" font-size="64" fill="#3b82f6">Build Your Future.</text>
+
+    <text x="0" y="320" font-family="sans-serif" font-weight="500" font-size="26" fill="#94a3b8">The premier job &amp; internship finder platform for tech candidates in India.</text>
+
+    <rect x="0" y="370" width="340" height="56" rx="14" fill="#2563eb" />
+    <text x="170" y="406" font-family="sans-serif" font-weight="700" font-size="20" fill="#ffffff" text-anchor="middle">Explore Opportunities →</text>
+  </g>
+</svg>
