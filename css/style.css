@@ -375,6 +375,25 @@ button {
   gap: 10px;
 }
 
+/* Language Selector Dropdown */
+.lang-select {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  min-height: 44px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.lang-select:hover {
+  border-color: var(--border-hover);
+}
+
 .icon-button,
 .menu-button {
   border: 1px solid var(--border-color);

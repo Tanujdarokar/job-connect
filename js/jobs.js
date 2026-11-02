@@ -1,9 +1,14 @@
 /* ==========================================================================
    CareerConnect — Find Jobs Module (Vanilla JS)
+   Supports: Live Filtering, Infinite Scroll Toggle, and Job Alert Creation
    ========================================================================== */
 
 (function () {
   "use strict";
+
+  function t(key) {
+    return window.CareerI18n ? window.CareerI18n.t(key) : key;
+  }
 
   function init() {
     const root = document.querySelector("#page-content");
@@ -12,6 +17,8 @@
     const params = new URLSearchParams(location.search);
     const jobs = window.CareerData ? window.CareerData.jobs : [];
     const categories = [...new Set(jobs.map(j => j.category))];
+
+    const isInfinitePref = Career.read(Career.KEYS.infiniteScroll, false);
 
     root.innerHTML = `
       <section class="wrap page-intro">
@@ -23,17 +30,19 @@
       <section class="wrap results-layout">
         <aside class="filter-panel">
           <h3>
-            <span>Filter Jobs</span>
-            <i class="fa-solid fa-sliders"></i>
+            <span>${t("filter_title_jobs")}</span>
+            <button type="button" class="icon-button button-small" id="create-job-alert-btn" title="${t("create_alert")}" style="width:34px;height:34px">
+              <i class="fa-solid fa-bell" style="color:var(--primary)"></i>
+            </button>
           </h3>
           <form id="job-filters">
             <div class="filter-field">
-              <label for="job-query">Keyword</label>
+              <label for="job-query">${t("filter_keyword")}</label>
               <input id="job-query" name="query" type="search" placeholder="Title, skill, location, or company">
             </div>
 
             <div class="filter-field">
-              <label for="job-location">Location</label>
+              <label for="job-location">${t("filter_location")}</label>
               <select id="job-location" name="location">
                 <option value="">All Locations</option>
                 <option value="Bengaluru">Bengaluru</option>
@@ -46,7 +55,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="job-salary">Minimum Salary</label>
+              <label for="job-salary">${t("filter_salary")}</label>
               <select id="job-salary" name="salary">
                 <option value="0">Any Salary</option>
                 <option value="5">₹5 LPA+</option>
@@ -57,7 +66,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="job-level">Experience Required</label>
+              <label for="job-level">${t("filter_experience")}</label>
               <select id="job-level" name="experience">
                 <option value="">Any Experience</option>
                 <option value="0">Entry Level (0–1 years)</option>
@@ -67,7 +76,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="job-mode">Work Mode</label>
+              <label for="job-mode">${t("filter_mode")}</label>
               <select id="job-mode" name="mode">
                 <option value="">Any Work Mode</option>
                 <option value="Remote">Remote</option>
@@ -77,7 +86,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="job-category">Job Category</label>
+              <label for="job-category">${t("filter_category")}</label>
               <select id="job-category" name="category">
                 <option value="">All Categories</option>
                 ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join("")}
@@ -94,7 +103,7 @@
             </div>
 
             <button type="reset" class="button button-secondary button-small" style="width:100%;margin-top:8px">
-              <i class="fa-solid fa-rotate-left"></i> Reset Filters
+              <i class="fa-solid fa-rotate-left"></i> ${t("filter_reset")}
             </button>
           </form>
         </aside>
@@ -102,26 +111,36 @@
         <div>
           <div class="results-toolbar">
             <span class="results-count" id="job-count" aria-live="polite">Showing 0 jobs</span>
-            <label class="muted" for="job-sort" style="font-size:0.86rem">
-              Sort:
-              <select class="sort-select" id="job-sort">
-                <option value="recent">Most Recent</option>
-                <option value="salary">Salary: High to Low</option>
-                <option value="title">Title: A–Z</option>
-              </select>
-            </label>
+
+            <div style="display:flex;align-items:center;gap:14px">
+              <!-- Infinite Scroll Checkbox Toggle -->
+              <label class="check-line" style="margin:0;font-size:0.82rem" title="Automatically load listings when scrolling down">
+                <input type="checkbox" id="job-infinite-toggle"${isInfinitePref ? " checked" : ""}>
+                <span>${t("infinite_scroll")}</span>
+              </label>
+
+              <label class="muted" for="job-sort" style="font-size:0.86rem">
+                ${t("sort_label")}
+                <select class="sort-select" id="job-sort">
+                  <option value="recent">${t("sort_recent")}</option>
+                  <option value="salary">${t("sort_salary_high")}</option>
+                  <option value="title">${t("sort_title_az")}</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="results-grid" id="job-results"></div>
 
           <button type="button" class="button button-secondary" id="job-more" style="display:block;margin:28px auto 0">
-            Load More Jobs
+            ${t("load_more_jobs")}
           </button>
         </div>
       </section>
     `;
 
     const form = root.querySelector("#job-filters");
+    const infiniteToggle = root.querySelector("#job-infinite-toggle");
 
     // Pre-fill search inputs from URL query params
     if (params.get("query")) form.elements.query.value = params.get("query");
@@ -137,6 +156,8 @@
     }
 
     let pageLimit = 8;
+    let isFetchingScroll = false;
+    let totalFilteredCount = 0;
 
     function render() {
       const formData = new FormData(form);
@@ -178,6 +199,8 @@
         return matchesQuery && matchesLocation && matchesSalary && matchesExp && matchesMode && matchesCategory && matchesType;
       });
 
+      totalFilteredCount = filtered.length;
+
       // Sort Results
       const sortVal = root.querySelector("#job-sort").value;
       if (sortVal === "salary") filtered.sort((a, b) => b.salary - a.salary);
@@ -208,9 +231,34 @@
         moreBtn.hidden = true;
       } else {
         resultsEl.innerHTML = filtered.slice(0, pageLimit).map(Career.card).join("");
-        moreBtn.hidden = pageLimit >= filtered.length;
+
+        // Hide button if infinite scroll enabled or limit exceeded
+        const isInfinite = infiniteToggle ? infiniteToggle.checked : false;
+        moreBtn.hidden = isInfinite || pageLimit >= filtered.length;
       }
+
+      isFetchingScroll = false;
     }
+
+    // Infinite Scroll Window Handler
+    window.onscroll = () => {
+      if (!infiniteToggle || !infiniteToggle.checked || isFetchingScroll || pageLimit >= totalFilteredCount) return;
+
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 300;
+
+      if (scrollPosition >= threshold) {
+        isFetchingScroll = true;
+        pageLimit += 8;
+        render();
+      }
+    };
+
+    infiniteToggle.addEventListener("change", e => {
+      Career.write(Career.KEYS.infiniteScroll, e.target.checked);
+      pageLimit = 8;
+      render();
+    });
 
     form.addEventListener("input", () => { pageLimit = 8; render(); });
     form.addEventListener("change", () => { pageLimit = 8; render(); });
@@ -218,6 +266,18 @@
 
     root.querySelector("#job-sort").addEventListener("change", render);
     root.querySelector("#job-more").addEventListener("click", () => { pageLimit += 8; render(); });
+
+    // Job Alert Modal Trigger
+    const alertBtn = root.querySelector("#create-job-alert-btn");
+    if (alertBtn) {
+      alertBtn.addEventListener("click", () => {
+        const formData = new FormData(form);
+        Career.openJobAlertModal({
+          query: formData.get("query"),
+          location: formData.get("location")
+        });
+      });
+    }
 
     render();
   }

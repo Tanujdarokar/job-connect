@@ -1,7 +1,7 @@
 /* ==========================================================================
    CareerConnect — Main Core Framework & Shared Logic (Vanilla JS)
    Production-ready architecture: zero secrets, sanitization, bot prevention,
-   security logging, and cookie consent banner.
+   security logging, cookie consent, multi-language (i18n), and job alerts.
    ========================================================================== */
 
 (function () {
@@ -18,8 +18,15 @@
     theme: "careerconnect:theme",
     recent: "careerconnect:recent",
     consent: "careerconnect:cookie_consent",
-    securityLogs: "careerconnect:security_logs"
+    securityLogs: "careerconnect:security_logs",
+    alerts: "careerconnect:job_alerts",
+    infiniteScroll: "careerconnect:infinite_scroll"
   };
+
+  // Translation Helper shorthand
+  function t(key) {
+    return window.CareerI18n ? window.CareerI18n.t(key) : key;
+  }
 
   // Safe LocalStorage Reader
   function read(key, fallback) {
@@ -293,10 +300,94 @@
 
         // Update direct apply button on page if present
         document.querySelectorAll(`[data-apply="${item.id}"]`).forEach(btn => {
-          btn.textContent = "Applied ✓";
+          btn.textContent = t("applied");
           btn.disabled = true;
           btn.classList.replace("button-primary", "button-secondary");
         });
+      }
+    };
+  }
+
+  // Job Alert Modal Component
+  function openJobAlertModal(prefillCriteria = {}) {
+    let backdrop = document.querySelector(".modal-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop";
+      document.body.appendChild(backdrop);
+    }
+
+    const titleVal = prefillCriteria.query || "Software Developer";
+    const locVal = prefillCriteria.location || "All Locations";
+
+    backdrop.innerHTML = `
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
+        <div class="modal-head">
+          <h3 id="alert-modal-title"><i class="fa-solid fa-bell" style="color:var(--primary)"></i> Create Job Alert</h3>
+          <button type="button" class="modal-close" data-modal-close aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="job-alert-form">
+          <div class="modal-body">
+            <p class="muted" style="font-size:0.88rem;margin-bottom:12px">
+              Save your target criteria. You will receive local browser notification digests when new matching jobs or internships are posted!
+            </p>
+
+            <div>
+              <label for="alert-title">Target Keyword / Title</label>
+              <input id="alert-title" name="title" type="text" value="${escapeHtml(titleVal)}" required placeholder="e.g. Flutter, React, Data Science">
+            </div>
+
+            <div>
+              <label for="alert-location">Target Location</label>
+              <input id="alert-location" name="location" type="text" value="${escapeHtml(locVal)}" placeholder="e.g. Bengaluru, Remote">
+            </div>
+
+            <div>
+              <label for="alert-frequency">Alert Notification Frequency</label>
+              <select id="alert-frequency" name="frequency">
+                <option value="Instant">Instant Local Alert</option>
+                <option value="Daily">Daily Digest</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-foot">
+            <button type="button" class="button button-secondary" data-modal-close>Cancel</button>
+            <button type="submit" class="button button-primary">Create Alert ✓</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    backdrop.classList.add("open");
+
+    const closeModal = () => {
+      backdrop.classList.remove("open");
+    };
+
+    backdrop.querySelectorAll("[data-modal-close]").forEach(btn => btn.addEventListener("click", closeModal));
+    backdrop.onclick = e => { if (e.target === backdrop) closeModal(); };
+
+    const form = backdrop.querySelector("#job-alert-form");
+    form.onsubmit = e => {
+      e.preventDefault();
+      const title = form.elements.title.value.trim();
+      const location = form.elements.location.value.trim();
+      const frequency = form.elements.frequency.value;
+
+      const alerts = read(KEYS.alerts, []);
+      alerts.unshift({
+        id: "alert-" + Date.now(),
+        title,
+        location,
+        frequency,
+        createdAt: new Date().toISOString()
+      });
+
+      if (write(KEYS.alerts, alerts)) {
+        toast(`Job Alert created for '${title}'!`);
+        logSecurityEvent("Job_Alert_Created", `Title: ${title}`);
+        closeModal();
       }
     };
   }
@@ -354,23 +445,27 @@
         <div class="skill-list">${tagsHtml}</div>
 
         <div class="listing-bottom">
-          <span class="demo-label">Demo listing</span>
-          <a class="button button-primary button-small" href="${link}">View details →</a>
+          <span class="demo-label">${t("demo_listing")}</span>
+          <a class="button button-primary button-small" href="${link}">${t("view_details")}</a>
         </div>
       </article>
     `;
   }
 
-  // Header & Navbar Component
+  // Header & Navbar Component with Multi-Language Selector
   function header(pageKey) {
     const user = currentUser();
     const currentTheme = read(KEYS.theme, "light");
+    const currentLang = window.CareerI18n ? window.CareerI18n.getLang() : "en";
+
     const navItems = [
-      ["Home", "index.html", "home"],
-      ["Find Jobs", "jobs.html", "jobs"],
-      ["Internships", "internships.html", "internships"],
-      ["Dashboard", "dashboard.html", "dashboard"]
+      [t("nav_home"), "index.html", "home"],
+      [t("nav_jobs"), "jobs.html", "jobs"],
+      [t("nav_internships"), "internships.html", "internships"],
+      [t("nav_dashboard"), "dashboard.html", "dashboard"]
     ];
+
+    const alertsCount = read(KEYS.alerts, []).length;
 
     return `
       <header class="site-header">
@@ -391,16 +486,26 @@
           </div>
 
           <div class="nav-actions">
+            <!-- Language Switcher Select -->
+            <select class="lang-select" id="global-lang-select" aria-label="Select Language" title="Switch interface language">
+              <option value="en"${currentLang === "en" ? " selected" : ""}>🇺🇸 English</option>
+              <option value="hi"${currentLang === "hi" ? " selected" : ""}>🇮🇳 हिंदी</option>
+              <option value="mr"${currentLang === "mr" ? " selected" : ""}>🇮🇳 मराठी</option>
+              <option value="ta"${currentLang === "ta" ? " selected" : ""}>🇮🇳 தமிழ்</option>
+              <option value="te"${currentLang === "te" ? " selected" : ""}>🇮🇳 తెలుగు</option>
+            </select>
+
+            <!-- Theme Switcher -->
             <button type="button" class="icon-button" data-theme-toggle aria-label="Toggle dark mode" title="Switch color theme">
               <i class="fa-solid ${currentTheme === "dark" ? "fa-sun" : "fa-moon"}"></i>
             </button>
 
             ${user ? `
               <span class="user-pill"><i class="fa-solid fa-user"></i> ${escapeHtml(user.name.split(" ")[0])}</span>
-              <button class="button button-secondary button-small" type="button" data-logout>Log out</button>
+              <button class="button button-secondary button-small" type="button" data-logout>${t("nav_logout")}</button>
             ` : `
-              <a class="button button-secondary button-small" href="login.html">Log in</a>
-              <a class="button button-primary button-small" href="register.html">Sign up</a>
+              <a class="button button-secondary button-small" href="login.html">${t("nav_login")}</a>
+              <a class="button button-primary button-small" href="register.html">${t("nav_signup")}</a>
             `}
           </div>
         </nav>
@@ -426,9 +531,9 @@
             <div class="footer-col">
               <h3>Explore</h3>
               <div class="footer-links">
-                <a href="jobs.html">Find Jobs</a>
-                <a href="internships.html">Find Internships</a>
-                <a href="dashboard.html">User Dashboard</a>
+                <a href="jobs.html">${t("nav_jobs")}</a>
+                <a href="internships.html">${t("nav_internships")}</a>
+                <a href="dashboard.html">${t("nav_dashboard")}</a>
                 <a href="index.html#why-careerconnect">Why CareerConnect</a>
               </div>
             </div>
@@ -438,8 +543,8 @@
               <div class="footer-links">
                 <a href="privacy.html">Privacy Policy</a>
                 <a href="terms.html">Terms & Conditions</a>
-                <a href="login.html">Log in</a>
-                <a href="register.html">Create an Account</a>
+                <a href="login.html">${t("nav_login")}</a>
+                <a href="register.html">${t("nav_signup")}</a>
               </div>
             </div>
           </div>
@@ -466,7 +571,7 @@
           <i class="fa-solid fa-cookie-bite" style="color:var(--primary)"></i> Privacy & Local Storage Consent
         </strong>
         <p style="margin-top:6px">
-          CareerConnect uses essential LocalStorage to preserve your theme preference, bookmarks, and local demo applications. We do not use remote tracking cookies.
+          CareerConnect uses essential LocalStorage to preserve your theme preference, language choice, bookmarks, and local demo applications. We do not use remote tracking cookies.
         </p>
       </div>
       <div class="cookie-actions">
@@ -496,20 +601,20 @@
     return `
       <section class="hero">
         <div class="wrap hero-content">
-          <span class="eyebrow">Your Career Journey Starts Here</span>
-          <h1>Discover Opportunities.<br><span>Build Your Future.</span></h1>
-          <p class="hero-copy">Find top engineering jobs, high-stipend internships, and remote roles from leading tech companies in India.</p>
+          <span class="eyebrow">${t("hero_eyebrow")}</span>
+          <h1>${t("hero_title_1")}<br><span>${t("hero_title_2")}</span></h1>
+          <p class="hero-copy">${t("hero_subtitle")}</p>
 
           <form class="search-box" data-home-search>
             <div class="search-field">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input name="query" type="search" placeholder="Job title, skill, or company" aria-label="Search job title, skill or company">
+              <input name="query" type="search" placeholder="${t("hero_search_query")}" aria-label="${t("hero_search_query")}">
             </div>
             <div class="search-field">
               <i class="fa-solid fa-location-dot"></i>
-              <input name="location" type="search" placeholder="City (e.g. Bengaluru, Remote)" aria-label="Location">
+              <input name="location" type="search" placeholder="${t("hero_search_location")}" aria-label="${t("hero_search_location")}">
             </div>
-            <button class="button button-primary" type="submit">Search Opportunities →</button>
+            <button class="button button-primary" type="submit">${t("hero_search_btn")}</button>
           </form>
 
           <div class="quick-row">
@@ -764,11 +869,11 @@
           </div>
 
           <button type="button" class="button ${hasApplied ? "button-secondary" : "button-primary"}" data-apply="${item.id}" ${hasApplied ? "disabled" : ""}>
-            ${hasApplied ? "Applied ✓" : "Apply Now →"}
+            ${hasApplied ? t("applied") : t("apply_now")}
           </button>
 
           <button type="button" class="button button-secondary" data-save="${item.id}" aria-pressed="${isSaved}">
-            <i class="${isSaved ? "fa-solid" : "fa-regular"} fa-bookmark"></i> ${isSaved ? "Saved" : "Save Opportunity"}
+            <i class="${isSaved ? "fa-solid" : "fa-regular"} fa-bookmark"></i> ${isSaved ? t("saved") : t("save_opportunity")}
           </button>
 
           <p class="muted" style="font-size:0.78rem;margin-top:12px;text-align:center">
@@ -787,7 +892,10 @@
   function initialize() {
     const pageKey = document.body.dataset.page || "home";
 
-    // Set Theme
+    // Set Language & Theme
+    if (window.CareerI18n) {
+      document.documentElement.lang = window.CareerI18n.getLang();
+    }
     document.body.dataset.theme = read(KEYS.theme, "light");
 
     // Render Navigation & Footer
@@ -804,6 +912,18 @@
 
     // Cookie Consent Banner
     renderCookieConsent();
+
+    // Language Selector Change Listener
+    const langSelect = document.querySelector("#global-lang-select");
+    if (langSelect) {
+      langSelect.addEventListener("change", e => {
+        if (window.CareerI18n) {
+          window.CareerI18n.setLang(e.target.value);
+          toast(`Language changed to ${e.target.options[e.target.selectedIndex].text}`);
+          setTimeout(() => window.location.reload(), 200);
+        }
+      });
+    }
 
     // Global Click Delegation
     document.addEventListener("click", e => {
@@ -889,6 +1009,7 @@
     setCurrentUser,
     apply,
     toggleSave,
+    openJobAlertModal,
     logSecurityEvent
   };
 

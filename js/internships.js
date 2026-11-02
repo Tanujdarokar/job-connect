@@ -1,9 +1,14 @@
 /* ==========================================================================
    CareerConnect — Find Internships Module (Vanilla JS)
+   Supports: Live Filtering, Infinite Scroll Toggle, and Job Alert Creation
    ========================================================================== */
 
 (function () {
   "use strict";
+
+  function t(key) {
+    return window.CareerI18n ? window.CareerI18n.t(key) : key;
+  }
 
   function init() {
     const root = document.querySelector("#page-content");
@@ -12,6 +17,8 @@
     const params = new URLSearchParams(location.search);
     const internships = window.CareerData ? window.CareerData.internships : [];
     const categories = [...new Set(internships.map(item => item.category))];
+
+    const isInfinitePref = Career.read(Career.KEYS.infiniteScroll, false);
 
     root.innerHTML = `
       <section class="wrap page-intro">
@@ -23,17 +30,19 @@
       <section class="wrap results-layout">
         <aside class="filter-panel">
           <h3>
-            <span>Filter Internships</span>
-            <i class="fa-solid fa-sliders"></i>
+            <span>${t("filter_title_internships")}</span>
+            <button type="button" class="icon-button button-small" id="create-intern-alert-btn" title="${t("create_alert")}" style="width:34px;height:34px">
+              <i class="fa-solid fa-bell" style="color:var(--primary)"></i>
+            </button>
           </h3>
           <form id="intern-filters">
             <div class="filter-field">
-              <label for="intern-query">Keyword</label>
+              <label for="intern-query">${t("filter_keyword")}</label>
               <input id="intern-query" name="query" type="search" placeholder="Title, domain, skill, location, or company">
             </div>
 
             <div class="filter-field">
-              <label for="intern-domain">Domain</label>
+              <label for="intern-domain">${t("filter_domain")}</label>
               <select id="intern-domain" name="category">
                 <option value="">All Domains</option>
                 ${categories.map(c => `<option value="${c}">${c}</option>`).join("")}
@@ -41,7 +50,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="intern-mode">Work Mode</label>
+              <label for="intern-mode">${t("filter_mode")}</label>
               <select id="intern-mode" name="mode">
                 <option value="">Any Work Mode</option>
                 <option value="Remote">Remote</option>
@@ -51,7 +60,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="intern-duration">Maximum Duration</label>
+              <label for="intern-duration">${t("filter_duration")}</label>
               <select id="intern-duration" name="duration">
                 <option value="">Any Duration</option>
                 <option value="3">Up to 3 Months</option>
@@ -61,7 +70,7 @@
             </div>
 
             <div class="filter-field">
-              <label for="intern-stipend">Minimum Monthly Stipend</label>
+              <label for="intern-stipend">${t("filter_stipend")}</label>
               <select id="intern-stipend" name="stipend">
                 <option value="0">Any Stipend</option>
                 <option value="10000">₹10,000+ / mo</option>
@@ -72,11 +81,11 @@
 
             <label class="check-line">
               <input type="checkbox" name="paid">
-              <span>Paid Internships Only</span>
+              <span>${t("filter_paid_only")}</span>
             </label>
 
             <button type="reset" class="button button-secondary button-small" style="width:100%;margin-top:8px">
-              <i class="fa-solid fa-rotate-left"></i> Reset Filters
+              <i class="fa-solid fa-rotate-left"></i> ${t("filter_reset")}
             </button>
           </form>
         </aside>
@@ -84,26 +93,36 @@
         <div>
           <div class="results-toolbar">
             <span class="results-count" id="intern-count" aria-live="polite">Showing 0 internships</span>
-            <label class="muted" for="intern-sort" style="font-size:0.86rem">
-              Sort:
-              <select class="sort-select" id="intern-sort">
-                <option value="recent">Most Recent</option>
-                <option value="stipend">Stipend: High to Low</option>
-                <option value="deadline">Closing Soon</option>
-              </select>
-            </label>
+
+            <div style="display:flex;align-items:center;gap:14px">
+              <!-- Infinite Scroll Checkbox Toggle -->
+              <label class="check-line" style="margin:0;font-size:0.82rem" title="Automatically load listings when scrolling down">
+                <input type="checkbox" id="intern-infinite-toggle"${isInfinitePref ? " checked" : ""}>
+                <span>${t("infinite_scroll")}</span>
+              </label>
+
+              <label class="muted" for="intern-sort" style="font-size:0.86rem">
+                ${t("sort_label")}
+                <select class="sort-select" id="intern-sort">
+                  <option value="recent">${t("sort_recent")}</option>
+                  <option value="stipend">${t("sort_stipend_high")}</option>
+                  <option value="deadline">${t("sort_closing_soon")}</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div class="results-grid" id="intern-results"></div>
 
           <button type="button" class="button button-secondary" id="intern-more" style="display:block;margin:28px auto 0">
-            Load More Internships
+            ${t("load_more_internships")}
           </button>
         </div>
       </section>
     `;
 
     const form = root.querySelector("#intern-filters");
+    const infiniteToggle = root.querySelector("#intern-infinite-toggle");
 
     // Pre-fill query
     if (params.get("query")) form.elements.query.value = params.get("query");
@@ -113,6 +132,8 @@
     }
 
     let pageLimit = 8;
+    let isFetchingScroll = false;
+    let totalFilteredCount = 0;
 
     function render() {
       const formData = new FormData(form);
@@ -135,6 +156,8 @@
 
         return matchesQuery && matchesCategory && matchesMode && matchesDuration && matchesStipend && matchesPaid;
       });
+
+      totalFilteredCount = filtered.length;
 
       // Sort
       const sortVal = root.querySelector("#intern-sort").value;
@@ -166,9 +189,33 @@
         moreBtn.hidden = true;
       } else {
         resultsEl.innerHTML = filtered.slice(0, pageLimit).map(Career.card).join("");
-        moreBtn.hidden = pageLimit >= filtered.length;
+
+        const isInfinite = infiniteToggle ? infiniteToggle.checked : false;
+        moreBtn.hidden = isInfinite || pageLimit >= filtered.length;
       }
+
+      isFetchingScroll = false;
     }
+
+    // Infinite Scroll Window Handler
+    window.onscroll = () => {
+      if (!infiniteToggle || !infiniteToggle.checked || isFetchingScroll || pageLimit >= totalFilteredCount) return;
+
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.body.offsetHeight - 300;
+
+      if (scrollPosition >= threshold) {
+        isFetchingScroll = true;
+        pageLimit += 8;
+        render();
+      }
+    };
+
+    infiniteToggle.addEventListener("change", e => {
+      Career.write(Career.KEYS.infiniteScroll, e.target.checked);
+      pageLimit = 8;
+      render();
+    });
 
     form.addEventListener("input", () => { pageLimit = 8; render(); });
     form.addEventListener("change", () => { pageLimit = 8; render(); });
@@ -176,6 +223,18 @@
 
     root.querySelector("#intern-sort").addEventListener("change", render);
     root.querySelector("#intern-more").addEventListener("click", () => { pageLimit += 8; render(); });
+
+    // Job Alert Modal Trigger
+    const alertBtn = root.querySelector("#create-intern-alert-btn");
+    if (alertBtn) {
+      alertBtn.addEventListener("click", () => {
+        const formData = new FormData(form);
+        Career.openJobAlertModal({
+          query: formData.get("query"),
+          location: formData.get("category")
+        });
+      });
+    }
 
     render();
   }

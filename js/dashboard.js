@@ -35,6 +35,8 @@
     const savedJobs = savedItems.filter(item => Career.listingType(item) === "job");
     const savedInternships = savedItems.filter(item => Career.listingType(item) === "internship");
 
+    const alerts = Career.read(Career.KEYS.alerts, []);
+
     // Profile Completion Calculator
     function getCompletionPercent(u) {
       let percent = 0;
@@ -55,7 +57,7 @@
           <div>
             <span class="eyebrow">Candidate Command Center</span>
             <h1>Your Dashboard</h1>
-            <p class="muted">Manage your user profile, saved opportunities, and live application tracking.</p>
+            <p class="muted">Manage your user profile, saved opportunities, job alerts, and live application tracking.</p>
           </div>
           <span class="demo-label"><i class="fa-solid fa-user-check"></i> Demo Candidate Session</span>
         </div>
@@ -144,6 +146,9 @@
                 </button>
                 <button class="tab-button" type="button" data-tab="saved-internships" role="tab" aria-selected="false">
                   <i class="fa-solid fa-graduation-cap"></i> Saved Internships (${savedInternships.length})
+                </button>
+                <button class="tab-button" type="button" data-tab="alerts" role="tab" aria-selected="false">
+                  <i class="fa-solid fa-bell"></i> Job Alerts (${alerts.length})
                 </button>
                 <button class="tab-button" type="button" data-tab="recent" role="tab" aria-selected="false">
                   <i class="fa-solid fa-clock-rotate-left"></i> Recently Viewed
@@ -264,6 +269,40 @@
           </div>
         `;
 
+      } else if (tabKey === "alerts") {
+        const currentAlerts = Career.read(Career.KEYS.alerts, []);
+        if (currentAlerts.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-solid fa-bell"></i></div>
+              <h3>No Active Job Alerts</h3>
+              <p>Create search alerts on the Jobs or Internships page to receive notification digests for new opportunities.</p>
+              <a class="button button-primary button-small" href="jobs.html">Create Job Alert →</a>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="application-list">
+            ${currentAlerts.map(alt => `
+              <article class="application-card">
+                <div class="application-info">
+                  <span class="company-logo" style="color:var(--primary);background:var(--primary-light)"><i class="fa-solid fa-bell"></i></span>
+                  <div>
+                    <h3>${Career.escapeHtml(alt.title)}</h3>
+                    <p>${Career.escapeHtml(alt.location || "All Locations")} · Frequency: ${Career.escapeHtml(alt.frequency || "Instant")}</p>
+                  </div>
+                </div>
+
+                <button type="button" class="button button-secondary button-small" data-delete-alert="${alt.id}" style="color:var(--danger)">
+                  <i class="fa-solid fa-trash-can"></i> Delete Alert
+                </button>
+              </article>
+            `).join("")}
+          </div>
+        `;
+
       } else if (tabKey === "recent") {
         const recentIds = Career.read(Career.KEYS.recent, []);
         const recentItems = recentIds.map(id => Career.getListing(id)).filter(Boolean);
@@ -293,6 +332,21 @@
     // Tab Buttons Event Delegation
     root.querySelectorAll("[data-tab]").forEach(btn => {
       btn.addEventListener("click", () => renderTab(btn.dataset.tab));
+    });
+
+    // Delete Job Alert Delegation
+    root.addEventListener("click", e => {
+      const delBtn = e.target.closest("[data-delete-alert]");
+      if (!delBtn) return;
+
+      const alertId = delBtn.dataset.deleteAlert;
+      const currentAlerts = Career.read(Career.KEYS.alerts, []);
+      const updatedAlerts = currentAlerts.filter(a => a.id !== alertId);
+
+      if (Career.write(Career.KEYS.alerts, updatedAlerts)) {
+        Career.toast("Job Alert deleted.");
+        renderTab("alerts");
+      }
     });
 
     // Application Status Change Handler (In-Place Update without full re-render)
