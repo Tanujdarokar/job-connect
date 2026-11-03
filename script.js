@@ -7,7 +7,7 @@
    Paste the published CSV URL in SHEET_URL below.
    ========================================================================== */
 
-const SHEET_URL = "";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSblR78-nVNIgjyCtGQyvkMjfjgZ5eOJIyDTocxx-QxbFAhmIoK98UFLH3TndLEdw/pub?gid=1382008253&single=true&output=csv";
 
 (function () {
   "use strict";
