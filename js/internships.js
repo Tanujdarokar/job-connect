@@ -230,8 +230,8 @@
       alertBtn.addEventListener("click", () => {
         const formData = new FormData(form);
         Career.openJobAlertModal({
-          query: formData.get("query"),
-          location: formData.get("category")
+          query: formData.get("query") || formData.get("category"),
+          location: ""
         });
       });
     }

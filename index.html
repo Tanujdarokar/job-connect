@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="CareerConnect — Discover jobs and internships from top tech companies across India. Save opportunities and track your career applications safely.">
+  <meta name="description" content="CareerConnect — Live Job & Internship Finder Platform powered by dynamic Google Sheets CSV data. Discover full-time jobs, high-stipend internships, and remote roles across India.">
   <meta name="theme-color" content="#2563eb">
-  <title>CareerConnect | Discover Opportunities. Build Your Future.</title>
+  <title>CareerConnect | Live Job & Internship Finder</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
 
   <!-- Open Graph / Social Sharing Meta -->
-  <meta property="og:title" content="CareerConnect | Discover Opportunities. Build Your Future.">
-  <meta property="og:description" content="Discover jobs and internships from top companies in India. Save opportunities and track your career journey safely with CareerConnect.">
+  <meta property="og:title" content="CareerConnect | Live Job & Internship Finder">
+  <meta property="og:description" content="Discover active engineering jobs and internships from top employers across India. Dynamic CSV & Google Sheets data integration.">
   <meta property="og:image" content="assets/images/og-preview.svg">
   <meta property="og:type" content="website">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CareerConnect | Job & Internship Finder Platform">
-  <meta name="twitter:description" content="Discover engineering roles, high-stipend internships, and remote opportunities across India.">
+  <meta name="twitter:title" content="CareerConnect | Live Job & Internship Finder">
+  <meta name="twitter:description" content="Discover active engineering jobs and internships. Powered by live Google Sheets CSV sync.">
   <meta name="twitter:image" content="assets/images/og-preview.svg">
 
   <!-- Google Fonts & Font Awesome Icons -->
@@ -37,6 +37,7 @@
   <script defer src="js/data.js"></script>
   <script defer src="js/i18n.js"></script>
   <script defer src="js/analytics.js"></script>
+  <script defer src="script.js"></script>
   <script defer src="js/main.js"></script>
   <script defer src="js/jobs.js"></script>
   <script defer src="js/internships.js"></script>
@@ -44,8 +45,186 @@
   <script defer src="js/dashboard.js"></script>
 </head>
 <body data-page="home">
+  <!-- Dynamic Navbar -->
   <div id="navbar-container"></div>
-  <main id="page-content"></main>
+
+  <main id="page-content" data-home-dynamic>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="wrap hero-content">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <span class="eyebrow">Dynamic Data Engine</span>
+          <span class="demo-label" id="data-source-badge">
+            <i class="fa-solid fa-spinner fa-spin"></i> Loading Data...
+          </span>
+        </div>
+
+        <h1>Discover Opportunities.<br><span>Build Your Future.</span></h1>
+        <p class="hero-copy">Find active software engineering jobs, high-stipend internships, and remote roles synced dynamically from live Google Sheets.</p>
+
+        <!-- Live Hero Search Box -->
+        <div class="search-box">
+          <div class="search-field">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="hero-search-input" type="search" placeholder="Search title, company, skills, or location..." aria-label="Search job title, company, or skills">
+          </div>
+          <button class="button button-primary" type="button" onclick="document.querySelector('#filter-form').scrollIntoView({behavior:'smooth'})">Search Opportunities →</button>
+        </div>
+
+        <!-- Quick Filter Chips -->
+        <div class="quick-row">
+          <span>Popular Searches:</span>
+          <button type="button" class="chip" onclick="document.querySelector('#hero-search-input').value='Frontend';applyFilters()">Frontend</button>
+          <button type="button" class="chip" onclick="document.querySelector('#hero-search-input').value='Flutter';applyFilters()">Flutter</button>
+          <button type="button" class="chip" onclick="document.querySelector('#hero-search-input').value='Data Science';applyFilters()">Data Science</button>
+          <button type="button" class="chip" onclick="document.querySelector('#hero-search-input').value='Remote';applyFilters()">Remote</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Strip -->
+    <section class="company-strip" style="padding:22px 0">
+      <div class="wrap">
+        <div class="stats-grid" style="margin:0">
+          <div class="stat-card" style="box-shadow:none;background:transparent;border:0">
+            <div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <div class="stat-info">
+              <strong id="stat-total-openings">0</strong>
+              <span>Active Openings</span>
+            </div>
+          </div>
+
+          <div class="stat-card" style="box-shadow:none;background:transparent;border:0">
+            <div class="stat-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="stat-info">
+              <strong id="stat-total-internships">0</strong>
+              <span>Internships</span>
+            </div>
+          </div>
+
+          <div class="stat-card" style="box-shadow:none;background:transparent;border:0">
+            <div class="stat-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="stat-info">
+              <strong id="stat-total-companies">0</strong>
+              <span>Companies Hiring</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Results Section -->
+    <section class="section wrap" id="explore">
+      <div class="results-layout">
+        <!-- Filter Panel Sidebar -->
+        <aside class="filter-panel">
+          <h3>
+            <span>Filter Opportunities</span>
+            <i class="fa-solid fa-sliders"></i>
+          </h3>
+
+          <form id="filter-form" onsubmit="event.preventDefault()">
+            <div class="filter-field">
+              <label for="filter-type">Opportunity Type</label>
+              <select id="filter-type" name="type">
+                <option value="">All Types (Jobs & Internships)</option>
+                <option value="Job">Job Only</option>
+                <option value="Internship">Internship Only</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="filter-location">Location</label>
+              <select id="filter-location" name="location">
+                <option value="">All Locations</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="filter-mode">Work Mode</label>
+              <select id="filter-mode" name="mode">
+                <option value="">Any Work Mode</option>
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="On-site">On-site</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="filter-category">Category / Domain</label>
+              <select id="filter-category" name="category">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="filter-experience">Experience Level</label>
+              <select id="filter-experience" name="experience">
+                <option value="">Any Experience</option>
+                <option value="0–1">0–1 years (Freshers)</option>
+                <option value="1–3">1–3 years</option>
+                <option value="3+">3+ years</option>
+              </select>
+            </div>
+
+            <button type="reset" class="button button-secondary button-small" style="width:100%;margin-top:8px">
+              <i class="fa-solid fa-rotate-left"></i> Reset All Filters
+            </button>
+          </form>
+        </aside>
+
+        <!-- Main Results Grid Area -->
+        <div>
+          <div class="results-toolbar">
+            <span class="results-count" id="job-count-text" aria-live="polite">Showing 0 active opportunities</span>
+
+            <div style="display:flex;align-items:center;gap:12px">
+              <!-- Saved View Toggle Button -->
+              <button type="button" class="button button-secondary button-small" id="view-saved-toggle">
+                <i class="fa-solid fa-bookmark"></i> Saved Jobs
+              </button>
+
+              <label class="muted" for="sort-select" style="font-size:0.86rem">
+                Sort:
+                <select class="sort-select" id="sort-select">
+                  <option value="newest">Newest First</option>
+                  <option value="deadline">Deadline Closing Soon</option>
+                  <option value="salary">Salary / Stipend High to Low</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <!-- Job Cards Grid -->
+          <div class="results-grid" id="job-results-grid"></div>
+
+          <!-- Load More Pagination Button -->
+          <button type="button" class="button button-secondary" id="load-more-btn" style="display:block;margin:28px auto 0">
+            Load More Opportunities
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Subscription & Contact Form Section -->
+    <section class="section" style="background:var(--bg-surface-2)">
+      <div class="wrap" style="max-width:680px;text-align:center">
+        <span class="eyebrow">Stay Ahead of Openings</span>
+        <h2>Subscribe for Job & Internship Updates</h2>
+        <p class="muted" style="margin:8px 0 24px">Get weekly digests of new remote roles and high-stipend tech internships delivered directly to your inbox.</p>
+
+        <form class="search-box" style="margin:0 auto" onsubmit="event.preventDefault();Career.toast('Subscribed successfully to weekly career alerts!');this.reset();">
+          <div class="search-field">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" required placeholder="Enter your email address" aria-label="Email address for subscription">
+          </div>
+          <button class="button button-primary" type="submit">Subscribe Free →</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- Dynamic Footer -->
   <div id="footer-container"></div>
   <div class="toast-region" aria-live="polite"></div>
 </body>

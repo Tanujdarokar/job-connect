@@ -19,12 +19,9 @@ Double-click `index.html` in your operating system's file manager to open it dir
 
 ---
 
-## 🔑 Demo Account Credentials
+## 🔑 Account Access & Data Privacy
 
-- **Email**: `student@careerconnect.demo`
-- **Password**: `demo123`
-
-> **Note**: You can also register a new account on the [Registration Page](register.html). Passwords are encrypted locally using **SHA-256 Web Crypto hashing** before storing in browser `LocalStorage`. All applications, bookmarks, and user session records remain 100% local and private to your browser.
+Candidates can create a private local account on the [Registration Page](register.html). All account credentials are encrypted using **SHA-256 Web Crypto hashing** before storing in browser `LocalStorage`. All job applications, bookmarks, and user session records remain 100% private to your local browser.
 
 ---
 

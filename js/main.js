@@ -12,6 +12,7 @@
 
   const KEYS = {
     saved: "careerconnect:saved",
+    dynamicListings: "careerconnect:dynamic-listings",
     applications: "careerconnect:applications",
     user: "careerconnect:user",
     users: "careerconnect:users",
@@ -78,11 +79,13 @@
   function getListing(id) {
     if (!window.CareerData) return null;
     return window.CareerData.jobs.find(item => item.id === id) ||
-           window.CareerData.internships.find(item => item.id === id);
+           window.CareerData.internships.find(item => item.id === id) ||
+           read(KEYS.dynamicListings, []).find(item => item.id === id) ||
+           null;
   }
 
   function listingType(item) {
-    return item.id.startsWith("intern-") ? "internship" : "job";
+    return item.kind === "internship" || item.id.startsWith("intern-") ? "internship" : "job";
   }
 
   // Floating Toast Notification
@@ -905,7 +908,7 @@
     if (footerContainer) footerContainer.innerHTML = footer();
 
     // Render Home Page if applicable
-    if (pageKey === "home") {
+    if (pageKey === "home" && !document.querySelector("#page-content[data-home-dynamic]")) {
       const pageContent = document.querySelector("#page-content");
       if (pageContent) pageContent.innerHTML = homeContent();
     }

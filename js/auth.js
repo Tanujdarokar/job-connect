@@ -25,37 +25,7 @@
     return "h_" + Math.abs(hash).toString(36);
   }
 
-  // Pre-hashed default demo user for privacy
-  const defaultDemoUser = {
-    name: "Aarav Sharma",
-    email: "student@careerconnect.demo",
-    passwordHash: null, // Will be computed dynamically below
-    headline: "CS Student & Aspiring Frontend Engineer",
-    location: "Bengaluru, KA"
-  };
-
-  async function seedDemoUser() {
-    let users = Career.read(Career.KEYS.users, []);
-    const demoEmail = defaultDemoUser.email.toLowerCase();
-    let demoEntry = users.find(u => u.email.toLowerCase() === demoEmail);
-
-    if (!demoEntry) {
-      const pHash = await hashPassword("demo123");
-      demoEntry = {
-        name: defaultDemoUser.name,
-        email: defaultDemoUser.email,
-        passwordHash: pHash,
-        headline: defaultDemoUser.headline,
-        location: defaultDemoUser.location
-      };
-      users.push(demoEntry);
-      Career.write(Career.KEYS.users, users);
-    }
-  }
-
   async function init(pageKey) {
-    await seedDemoUser();
-
     // Redirect to dashboard if already logged in
     if (Career.currentUser()) {
       window.location.replace("dashboard.html");
@@ -84,13 +54,13 @@
 
             <div>
               <label for="auth-email">Email Address</label>
-              <input id="auth-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="${isRegistering ? "" : "student@careerconnect.demo"}">
+              <input id="auth-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" value="">
             </div>
 
             <div>
               <label for="auth-password">Password</label>
               <div class="password-wrap">
-                <input id="auth-password" name="password" type="password" autocomplete="${isRegistering ? "new-password" : "current-password"}" minlength="6" required placeholder="At least 6 characters" value="${isRegistering ? "" : "demo123"}">
+                <input id="auth-password" name="password" type="password" autocomplete="${isRegistering ? "new-password" : "current-password"}" minlength="6" required placeholder="At least 6 characters" value="">
                 <button type="button" class="password-toggle" data-password-toggle>Show</button>
               </div>
             </div>
@@ -110,7 +80,7 @@
             <div class="form-message" id="auth-message" aria-live="polite"></div>
 
             <button class="button button-primary" type="submit" style="width:100%;margin-top:6px">
-              ${isRegistering ? "Create Demo Account" : "Sign In"} →
+              ${isRegistering ? "Create Account" : "Sign In"} →
             </button>
           </form>
 
@@ -122,10 +92,7 @@
 
           <div class="auth-note">
             <strong style="color:var(--text-main)"><i class="fa-solid fa-user-shield"></i> Privacy & Data Safety Protection:</strong><br>
-            All passwords are encrypted using <strong>SHA-256 hashing</strong> before storing locally. No plaintext credentials or user tracking data are ever transmitted to remote servers.<br>
-            ${isRegistering
-              ? "Your account details remain 100% private inside your browser."
-              : "Demo Login: <code>student@careerconnect.demo</code> / <code>demo123</code>"}
+            All passwords are encrypted using <strong>SHA-256 Web Crypto hashing</strong> before storing locally. No plaintext credentials or user tracking data are ever transmitted to remote servers.
           </div>
         </div>
       </section>
@@ -202,7 +169,7 @@
         if (!Career.write(Career.KEYS.users, users)) return;
 
         Career.setCurrentUser({ name, email, headline: newUser.headline, location: newUser.location }, true);
-        Career.toast("Demo account created securely! Welcome aboard.");
+        Career.toast("Account created securely! Welcome aboard.");
         window.location.href = "dashboard.html";
 
       } else {
