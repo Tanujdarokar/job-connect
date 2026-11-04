@@ -486,6 +486,7 @@
             ${navItems.map(([label, href, key]) => `
               <a href="${href}"${pageKey === key ? ' class="active" aria-current="page"' : ''}>${label}</a>
             `).join("")}
+            ${user ? "" : `<a class="nav-mobile-only" href="login.html">${t("nav_login")}</a>`}
           </div>
 
           <div class="nav-actions">
